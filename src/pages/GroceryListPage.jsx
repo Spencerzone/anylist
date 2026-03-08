@@ -1,5 +1,5 @@
 // src/pages/GroceryListPage.jsx
-import { useState, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useGroceryList } from "../hooks/useGroceryList";
 
 const CATEGORIES = [
@@ -19,8 +19,9 @@ const CAT_ICONS = {
   "Pantry": "🏺", "Pet": "🐾", "Seafood": "🐟", "Snacks": "🍿", "Other": "📦"
 };
 
-function guessCategory(name) {
+function guessCategory(name, learned = {}) {
   const n = name.toLowerCase();
+  if (learned[n]) return learned[n];
   if (/milk|cheese|yogh|butter|cream|egg/.test(n)) return "Dairy";
   if (/bread|bun|roll|loaf/.test(n)) return "Bread";
   if (/chicken|beef|pork|lamb|mince|steak|sausage/.test(n)) return "Meat";
@@ -38,7 +39,7 @@ function guessCategory(name) {
 }
 
 // ── Edit / Add Modal ──────────────────────────────────────
-function ItemModal({ item, onSave, onDelete, onClose, user }) {
+function ItemModal({ item, onSave, onDelete, onClose, user, learnedCategories = {} }) {
   const [name, setName] = useState(item?.name || "");
   const [category, setCategory] = useState(item?.category || "Other");
   const [note, setNote] = useState(item?.note || "");
@@ -47,7 +48,7 @@ function ItemModal({ item, onSave, onDelete, onClose, user }) {
 
   useEffect(() => {
     nameRef.current?.focus();
-    if (item?.name && !item?.id) setCategory(guessCategory(item.name));
+    if (item?.name && !item?.id) setCategory(guessCategory(item.name, learnedCategories));
   }, []);
 
   return (
@@ -118,7 +119,7 @@ function ItemModal({ item, onSave, onDelete, onClose, user }) {
 }
 
 // ── Add Item Bar ──────────────────────────────────────────
-function AddItemBar({ onAdd, items, user }) {
+function AddItemBar({ onAdd, items, user, learnedCategories = {} }) {
   const [text, setText] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
@@ -135,7 +136,7 @@ function AddItemBar({ onAdd, items, user }) {
   };
 
   const quickAdd = (name) => {
-    onAdd({ name, category: guessCategory(name), note: "", emoji: "" }, user);
+    onAdd({ name, category: guessCategory(name, learnedCategories), note: "", emoji: "" }, user);
     setText(""); setSuggestions([]);
   };
 
@@ -185,7 +186,7 @@ function AddItemBar({ onAdd, items, user }) {
 
       {showModal && (
         <ItemModal
-          item={{ name: text, category: guessCategory(text), note: "" }}
+          item={{ name: text, category: guessCategory(text, learnedCategories), note: "" }}
           onSave={(newItem, u) => { onAdd(newItem, u); setText(""); setShowModal(false); }}
           onClose={() => setShowModal(false)}
           user={user}
@@ -261,6 +262,11 @@ export default function GroceryListPage({ user, onLogOut }) {
   const [editingItem, setEditingItem] = useState(null);
   const [showChecked, setShowChecked] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+
+  const learnedCategories = useMemo(() =>
+    Object.fromEntries(items.map(i => [i.name.toLowerCase(), i.category])),
+    [items]
+  );
 
   const displayItems = showChecked ? items : items.filter(i => !i.checked);
   const remaining = items.filter(i => !i.checked).length;
@@ -347,7 +353,7 @@ export default function GroceryListPage({ user, onLogOut }) {
       </div>
 
       {/* Add Bar */}
-      <AddItemBar onAdd={addItem} items={items} user={user} />
+      <AddItemBar onAdd={addItem} items={items} user={user} learnedCategories={learnedCategories} />
 
       {/* List */}
       <div style={{flex:1,overflowY:"auto"}}>
@@ -373,7 +379,7 @@ export default function GroceryListPage({ user, onLogOut }) {
 
       {/* Edit Modal */}
       {editingItem && (
-        <ItemModal item={editingItem} onSave={handleSave}
+        <ItemModal item={editingItem} onSave={handleSave} learnedCategories={learnedCategories}
           onDelete={async (id) => { await deleteItem(id); setEditingItem(null); }}
           onClose={() => setEditingItem(null)} user={user} />
       )}
