@@ -4,6 +4,7 @@ import { useAuth } from "./hooks/useAuth";
 import LoginPage from "./pages/LoginPage";
 import GroceryListPage from "./pages/GroceryListPage";
 import RecipesPage from "./pages/RecipesPage";
+import MealPlanPage from "./pages/MealPlanPage";
 
 export default function App() {
   const { user, signIn, logOut } = useAuth();
@@ -24,6 +25,10 @@ export default function App() {
 
   if (page === "recipes") {
     return <RecipesPage user={user} onNavigate={setPage} activePage={page} />;
+  }
+
+  if (page === "meal plan") {
+    return <MealPlanPage user={user} onNavigate={setPage} activePage={page} />;
   }
 
   return <GroceryListPage user={user} onLogOut={logOut} onNavigate={setPage} activePage={page} />;
