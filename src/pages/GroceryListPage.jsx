@@ -43,6 +43,8 @@ function ItemModal({ item, onSave, onDelete, onClose, user, learnedCategories = 
   const [name, setName] = useState(item?.name || "");
   const [category, setCategory] = useState(item?.category || "Other");
   const [note, setNote] = useState(item?.note || "");
+  const [quantity, setQuantity] = useState(item?.quantity || "");
+  const [packageSize, setPackageSize] = useState(item?.packageSize || "");
   const nameRef = useRef();
   const isNew = !item?.id;
 
@@ -50,6 +52,11 @@ function ItemModal({ item, onSave, onDelete, onClose, user, learnedCategories = 
     nameRef.current?.focus();
     if (item?.name && !item?.id) setCategory(guessCategory(item.name, learnedCategories));
   }, []);
+
+  const save = () => name.trim() && onSave({ ...item, name: name.trim(), category, note, quantity, packageSize }, user);
+  const fieldStyle = {width:"100%",padding:"11px 14px",fontSize:15,border:"1.5px solid #e8e8e8",
+    borderRadius:10,marginTop:5,outline:"none",fontFamily:"inherit",boxSizing:"border-box"};
+  const labelStyle = {fontSize:11,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:1};
 
   return (
     <div
@@ -67,32 +74,55 @@ function ItemModal({ item, onSave, onDelete, onClose, user, learnedCategories = 
           <button onClick={onClose} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"#aaa"}}>✕</button>
         </div>
 
-        {["Item Name", "Category", "Note"].map((label, i) => (
-          <div key={label} style={{marginBottom:16}}>
-            <label style={{fontSize:11,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:1}}>
-              {label}
-            </label>
-            {i === 1 ? (
-              <select value={category} onChange={e => setCategory(e.target.value)}
-                style={{width:"100%",padding:"11px 14px",fontSize:15,border:"1.5px solid #e8e8e8",
-                  borderRadius:10,marginTop:5,outline:"none",background:"#fff",
-                  fontFamily:"inherit",cursor:"pointer",boxSizing:"border-box"}}>
-                {CATEGORIES.map(c => <option key={c} value={c}>{CAT_ICONS[c]} {c}</option>)}
-              </select>
-            ) : (
-              <input
-                ref={i === 0 ? nameRef : undefined}
-                value={i === 0 ? name : note}
-                onChange={e => i === 0 ? setName(e.target.value) : setNote(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && name.trim() && onSave({...item, name:name.trim(), category, note}, user)}
-                placeholder={i === 0 ? "e.g. Milk, Bread..." : "Optional note..."}
-                style={{width:"100%",padding:"11px 14px",fontSize:15,border:"1.5px solid #e8e8e8",
-                  borderRadius:10,marginTop:5,outline:"none",fontFamily:"inherit",
-                  boxSizing:"border-box"}}
-              />
-            )}
+        {/* Name */}
+        <div style={{marginBottom:16}}>
+          <label style={labelStyle}>Item Name</label>
+          <input ref={nameRef} value={name} onChange={e => setName(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && save()}
+            placeholder="e.g. Milk, Bread..."
+            style={fieldStyle} />
+        </div>
+
+        {/* Category */}
+        <div style={{marginBottom:16}}>
+          <label style={labelStyle}>Category</label>
+          <select value={category} onChange={e => setCategory(e.target.value)}
+            style={{...fieldStyle,background:"#fff",cursor:"pointer"}}>
+            {CATEGORIES.map(c => <option key={c} value={c}>{CAT_ICONS[c]} {c}</option>)}
+          </select>
+        </div>
+
+        {/* Quantity + Package Size side by side */}
+        <div style={{display:"flex",gap:12,marginBottom:16}}>
+          <div style={{flex:1}}>
+            <label style={labelStyle}>Quantity</label>
+            <div style={{display:"flex",alignItems:"center",gap:6,marginTop:5}}>
+              <button onMouseDown={e => { e.preventDefault(); setQuantity(q => String(Math.max(0, (parseInt(q)||0) - 1) || "")); }}
+                style={{width:36,height:36,borderRadius:8,border:"1.5px solid #e8e8e8",background:"#f4f6f8",
+                  fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>−</button>
+              <input value={quantity} onChange={e => setQuantity(e.target.value)}
+                placeholder="—"
+                style={{...fieldStyle,marginTop:0,textAlign:"center",padding:"8px 6px",flex:1,minWidth:0}} />
+              <button onMouseDown={e => { e.preventDefault(); setQuantity(q => String((parseInt(q)||0) + 1)); }}
+                style={{width:36,height:36,borderRadius:8,border:"1.5px solid #e8e8e8",background:"#f4f6f8",
+                  fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>+</button>
+            </div>
           </div>
-        ))}
+          <div style={{flex:1}}>
+            <label style={labelStyle}>Package Size</label>
+            <input value={packageSize} onChange={e => setPackageSize(e.target.value)}
+              placeholder="e.g. 500g, 2L"
+              style={{...fieldStyle,marginTop:5}} />
+          </div>
+        </div>
+
+        {/* Note */}
+        <div style={{marginBottom:16}}>
+          <label style={labelStyle}>Note</label>
+          <input value={note} onChange={e => setNote(e.target.value)}
+            placeholder="Optional note..."
+            style={fieldStyle} />
+        </div>
 
         <div style={{display:"flex",gap:10,marginTop:4}}>
           {!isNew && (
@@ -103,9 +133,7 @@ function ItemModal({ item, onSave, onDelete, onClose, user, learnedCategories = 
               Delete
             </button>
           )}
-          <button
-            onClick={() => name.trim() && onSave({...item, name:name.trim(), category, note}, user)}
-            disabled={!name.trim()}
+          <button onClick={save} disabled={!name.trim()}
             style={{flex:2,padding:"13px",
               background:name.trim() ? "#1aaae0" : "#c8e8f5",
               color:"#fff",border:"none",borderRadius:12,fontWeight:700,
@@ -214,8 +242,10 @@ function ItemRow({ item, onToggle, onEdit }) {
           textDecoration:item.checked?"line-through":"none",letterSpacing:0.1}}>
           {item.name}
           {item.emoji && <span style={{marginLeft:6}}>{item.emoji}</span>}
+          {item.quantity && <span style={{marginLeft:6,fontSize:13,color:item.checked?"#c0c0c0":"#1aaae0",fontWeight:600}}>×{item.quantity}</span>}
         </span>
         <div style={{display:"flex",gap:8,marginTop:1,flexWrap:"wrap"}}>
+          {item.packageSize && <span style={{fontSize:11,color:"#aaa"}}>{item.packageSize}</span>}
           {item.note && <span style={{fontSize:11,color:"#999"}}>{item.note}</span>}
           {item.addedBy && (
             <span style={{fontSize:11,color:"#c0c0c0"}}>added by {item.addedBy.split(" ")[0]}</span>
@@ -280,7 +310,7 @@ export default function GroceryListPage({ user, onLogOut }) {
 
   const handleSave = async (item, u) => {
     if (item.id) {
-      await updateItem(item.id, { name: item.name, category: item.category, note: item.note });
+      await updateItem(item.id, { name: item.name, category: item.category, note: item.note, quantity: item.quantity || "", packageSize: item.packageSize || "" });
     } else {
       await addItem(item, u);
     }
