@@ -340,7 +340,8 @@ function AddItemBar({ onAdd, items, user, learnedCategories = {}, categories = D
 }
 
 // ── Item Row ──────────────────────────────────────────────
-function ItemRow({ item, onToggle, onEdit }) {
+function ItemRow({ item, onToggle, onEdit, toastId }) {
+  const justChecked = item.id === toastId;
   return (
     <div onClick={() => onToggle(item.id, item.checked)}
       style={{display:"flex",alignItems:"center",padding:"0 16px",
@@ -353,8 +354,10 @@ function ItemRow({ item, onToggle, onEdit }) {
         {item.checked && <span style={{color:"#fff",fontSize:13,fontWeight:800}}>✓</span>}
       </div>
       <div style={{flex:1,marginLeft:14}}>
-        <span style={{fontSize:15.5,color:item.checked?"#b0b0b0":"#1a1a2e",
-          textDecoration:item.checked?"line-through":"none",letterSpacing:0.1}}>
+        <span style={{fontSize:15.5,letterSpacing:0.1,
+          color: justChecked ? "#e53935" : item.checked ? "#b0b0b0" : "#1a1a2e",
+          textDecoration: item.checked ? "line-through" : "none",
+          textDecorationColor: justChecked ? "#e53935" : undefined}}>
           {item.name}
           {item.emoji && <span style={{marginLeft:6}}>{item.emoji}</span>}
           {item.quantity && <span style={{marginLeft:6,fontSize:13,color:item.checked?"#c0c0c0":"#1aaae0",fontWeight:600}}>×{item.quantity}</span>}
@@ -374,7 +377,7 @@ function ItemRow({ item, onToggle, onEdit }) {
 }
 
 // ── Category Section ──────────────────────────────────────
-function CategorySection({ category, items, onToggle, onEdit }) {
+function CategorySection({ category, items, onToggle, onEdit, toastId }) {
   const [collapsed, setCollapsed] = useState(false);
   const unchecked = items.filter(i => !i.checked);
   const checked = items.filter(i => i.checked);
@@ -392,7 +395,7 @@ function CategorySection({ category, items, onToggle, onEdit }) {
         </span>
       </div>
       {!collapsed && [...unchecked, ...checked].map(item => (
-        <ItemRow key={item.id} item={item} onToggle={onToggle} onEdit={onEdit} />
+        <ItemRow key={item.id} item={item} onToggle={onToggle} onEdit={onEdit} toastId={toastId} />
       ))}
     </div>
   );
@@ -544,7 +547,7 @@ export default function GroceryListPage({ user, onLogOut }) {
         ) : (
           Object.entries(grouped).map(([cat, catItems]) => (
             <CategorySection key={cat} category={cat} items={catItems}
-              onToggle={handleToggle} onEdit={setEditingItem} />
+              onToggle={handleToggle} onEdit={setEditingItem} toastId={toast?.id} />
           ))
         )}
         <div style={{height:90}} />
