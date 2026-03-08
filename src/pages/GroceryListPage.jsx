@@ -405,6 +405,29 @@ export default function GroceryListPage({ user, onLogOut }) {
   const [showChecked, setShowChecked] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showDotMenu, setShowDotMenu] = useState(false);
+  const [toast, setToast] = useState(null);
+  const toastTimer = useRef(null);
+
+  const handleToggle = (id, currentChecked) => {
+    toggleCheck(id, currentChecked);
+    if (!currentChecked) {
+      const item = items.find(i => i.id === id);
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+      setToast({ id, name: item?.name || "", emoji: item?.emoji || "" });
+      toastTimer.current = setTimeout(() => setToast(null), 4000);
+    } else if (toast?.id === id) {
+      clearTimeout(toastTimer.current);
+      setToast(null);
+    }
+  };
+
+  const handleUndoToast = () => {
+    if (toast) {
+      toggleCheck(toast.id, true);
+      clearTimeout(toastTimer.current);
+      setToast(null);
+    }
+  };
 
   const learnedCategories = useMemo(() => ({
     ...persistedLearned,
@@ -521,7 +544,7 @@ export default function GroceryListPage({ user, onLogOut }) {
         ) : (
           Object.entries(grouped).map(([cat, catItems]) => (
             <CategorySection key={cat} category={cat} items={catItems}
-              onToggle={toggleCheck} onEdit={setEditingItem} />
+              onToggle={handleToggle} onEdit={setEditingItem} />
           ))
         )}
         <div style={{height:90}} />
@@ -533,6 +556,23 @@ export default function GroceryListPage({ user, onLogOut }) {
           categories={effectiveCategories} onUpdateCategories={updateCategories} items={items}
           onDelete={async (id) => { await deleteItem(id); setEditingItem(null); }}
           onClose={() => setEditingItem(null)} user={user} />
+      )}
+
+      {/* Undo Toast */}
+      {toast && (
+        <div style={{position:"fixed",bottom:58,left:"50%",transform:"translateX(-50%)",
+          width:"100%",maxWidth:480,boxSizing:"border-box",
+          background:"#222",color:"#fff",display:"flex",alignItems:"center",
+          justifyContent:"space-between",padding:"14px 20px",zIndex:2000}}>
+          <span style={{fontSize:14}}>
+            Crossed off <em>{toast.name}</em>{toast.emoji ? ` ${toast.emoji}` : ""}
+          </span>
+          <button onClick={handleUndoToast}
+            style={{background:"none",border:"none",color:"#1aaae0",fontSize:14,
+              fontWeight:700,cursor:"pointer",letterSpacing:0.5,padding:0,marginLeft:16}}>
+            UNDO
+          </button>
+        </div>
       )}
 
       {/* Bottom Nav */}
