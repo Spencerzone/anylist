@@ -81,10 +81,20 @@ function parseRecipeJsonLd(recipe, sourceUrl) {
   };
 }
 
-// Parse WPRM ingredient HTML, preferring metric data-attributes when available.
+// Parse WPRM ingredient HTML, preferring the metric (unit-system-2) container when present.
+// WPRM renders both unit systems in the HTML (one hidden); we pick metric first.
 // Returns null if no WPRM ingredient elements are found.
 function parseWprmIngredients(doc) {
-  const items = doc.querySelectorAll("li.wprm-recipe-ingredient");
+  // WPRM wraps each unit system in a block with a class like
+  // "wprm-recipe-block-container-columns-unit-system-2".
+  // Prefer that (metric) container; fall back to the unit-system-1 container,
+  // then fall back to any ingredient list.  Scoping the query to a specific
+  // container also avoids duplicates when both systems are rendered.
+  const metricContainer  = doc.querySelector("[class*='unit-system-2']");
+  const primaryContainer = doc.querySelector("[class*='unit-system-1']");
+  const container = metricContainer ?? primaryContainer ?? doc;
+
+  const items = container.querySelectorAll("li.wprm-recipe-ingredient");
   if (!items.length) return null;
 
   return Array.from(items).map(li => {
@@ -93,12 +103,10 @@ function parseWprmIngredients(doc) {
     const nameEl   = li.querySelector(".wprm-recipe-ingredient-name");
     const notesEl  = li.querySelector(".wprm-recipe-ingredient-notes, .wprm-recipe-ingredient-comment");
 
-    // Prefer metric data attributes (WPRM Pro unit-conversion feature);
-    // fall back to the displayed (cups/imperial) text.
-    const qty  = (amountEl?.getAttribute("data-amount-metric") || amountEl?.textContent || "").trim();
-    const unit = (unitEl?.getAttribute("data-unit-metric")     || unitEl?.textContent   || "").trim();
-    const name = (nameEl?.textContent || "").trim();
-    const note = (notesEl?.textContent || "").trim();
+    const qty  = (amountEl?.textContent || "").trim();
+    const unit = (unitEl?.textContent   || "").trim();
+    const name = (nameEl?.textContent   || "").trim();
+    const note = (notesEl?.textContent  || "").trim();
 
     const fullName = [unit, name].filter(Boolean).join(" ");
     return { qty, name: fullName, note };
