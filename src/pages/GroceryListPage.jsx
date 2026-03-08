@@ -417,7 +417,7 @@ export default function GroceryListPage({ user, onLogOut }) {
   const remaining = items.filter(i => !i.checked).length;
   const checkedCount = items.filter(i => i.checked).length;
 
-  const grouped = CATEGORIES.reduce((acc, cat) => {
+  const grouped = effectiveCategories.reduce((acc, cat) => {
     const catItems = displayItems.filter(i => i.category === cat);
     if (catItems.length > 0) acc[cat] = catItems;
     return acc;
