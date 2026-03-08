@@ -285,28 +285,16 @@ function CategorySection({ category, items, onToggle, onEdit }) {
 
 // ── Main Page ─────────────────────────────────────────────
 export default function GroceryListPage({ user, onLogOut }) {
-  const { items, loading, addItem, updateItem, toggleCheck, deleteItem, clearChecked } = useGroceryList();
+  const { items, loading, addItem, updateItem, toggleCheck, deleteItem, clearChecked, persistedLearned, persistCategory } = useGroceryList();
   const [editingItem, setEditingItem] = useState(null);
   const [showChecked, setShowChecked] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showDotMenu, setShowDotMenu] = useState(false);
-  const [persistedLearned, setPersistedLearned] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("learnedCategories") || "{}"); }
-    catch { return {}; }
-  });
 
   const learnedCategories = useMemo(() => ({
     ...persistedLearned,
     ...Object.fromEntries(items.map(i => [i.name.toLowerCase(), i.category]))
   }), [items, persistedLearned]);
-
-  const persistCategory = (name, category) => {
-    setPersistedLearned(prev => {
-      const next = { ...prev, [name.toLowerCase()]: category };
-      localStorage.setItem("learnedCategories", JSON.stringify(next));
-      return next;
-    });
-  };
 
   const displayItems = showChecked ? items : items.filter(i => !i.checked);
   const remaining = items.filter(i => !i.checked).length;

@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import {
   collection, onSnapshot, addDoc, updateDoc,
-  deleteDoc, doc, serverTimestamp, query, orderBy
+  deleteDoc, doc, setDoc, serverTimestamp, query, orderBy
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 
@@ -13,6 +13,7 @@ const LIST_ID = "shared-family-list";
 export function useGroceryList() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [persistedLearned, setPersistedLearned] = useState({});
 
   useEffect(() => {
     const q = query(
@@ -21,14 +22,26 @@ export function useGroceryList() {
       orderBy("createdAt")
     );
 
-    const unsub = onSnapshot(q, (snap) => {
+    const unsubItems = onSnapshot(q, (snap) => {
       const data = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       setItems(data);
       setLoading(false);
     });
 
-    return unsub;
+    const unsubList = onSnapshot(doc(db, "lists", LIST_ID), (snap) => {
+      setPersistedLearned(snap.data()?.learnedCategories || {});
+    });
+
+    return () => { unsubItems(); unsubList(); };
   }, []);
+
+  const persistCategory = async (name, category) => {
+    await setDoc(
+      doc(db, "lists", LIST_ID),
+      { learnedCategories: { [name.toLowerCase()]: category } },
+      { merge: true }
+    );
+  };
 
   const addItem = async (item, user) => {
     await addDoc(collection(db, "lists", LIST_ID, "items"), {
@@ -67,5 +80,5 @@ export function useGroceryList() {
     await Promise.all(checked.map((i) => deleteItem(i.id)));
   };
 
-  return { items, loading, addItem, updateItem, toggleCheck, deleteItem, clearChecked };
+  return { items, loading, addItem, updateItem, toggleCheck, deleteItem, clearChecked, persistedLearned, persistCategory };
 }
