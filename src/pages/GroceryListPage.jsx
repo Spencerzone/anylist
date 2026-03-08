@@ -259,7 +259,7 @@ function CategorySection({ category, items, onToggle, onEdit }) {
 export default function GroceryListPage({ user, onLogOut }) {
   const { items, loading, addItem, updateItem, toggleCheck, deleteItem, clearChecked } = useGroceryList();
   const [editingItem, setEditingItem] = useState(null);
-  const [showChecked, setShowChecked] = useState(true);
+  const [showChecked, setShowChecked] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   const displayItems = showChecked ? items : items.filter(i => !i.checked);
