@@ -2,6 +2,7 @@
   "name": "anylist-pwa",
   "version": "1.0.0",
   "private": true,
+  "homepage": "https://Spencerzone.github.io/anylist",
   "dependencies": {
     "firebase": "^10.14.1",
     "react": "^18.3.0",
@@ -11,7 +12,9 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "deploy": "npm run build && firebase deploy"
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
+    "deploy:firebase": "npm run build && firebase deploy"
   },
   "browserslist": {
     "production": [
@@ -22,5 +25,8 @@
     "development": [
       "last 1 chrome version"
     ]
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
   }
 }
