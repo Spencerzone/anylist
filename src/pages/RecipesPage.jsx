@@ -113,6 +113,29 @@ function parseWprmIngredients(doc) {
   });
 }
 
+// Extract WPRM recipe notes and format as a numbered list.
+// Returns null when no notes block is present.
+function parseWprmNotes(doc) {
+  const container = doc.querySelector(".wprm-recipe-notes-container, .wprm-recipe-notes");
+  if (!container) return null;
+
+  const listItems = Array.from(container.querySelectorAll("li"))
+    .map(li => li.textContent.trim()).filter(Boolean);
+  if (listItems.length) {
+    return listItems.map((t, i) => `${i + 1}. ${t}`).join("\n");
+  }
+
+  // Fall back to newline-separated text blocks (some WPRM templates use <p> or plain text)
+  const blocks = Array.from(container.querySelectorAll("p"))
+    .map(p => p.textContent.trim()).filter(Boolean);
+  if (blocks.length) {
+    return blocks.map((t, i) => `${i + 1}. ${t}`).join("\n");
+  }
+
+  const text = container.textContent.trim();
+  return text || null;
+}
+
 async function fetchViaProxy(url) {
   const proxies = [
     `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
@@ -145,6 +168,8 @@ async function importRecipeFromUrl(url) {
         // prefer it over the combined JSON-LD ingredient strings.
         const wprmIngredients = parseWprmIngredients(doc);
         if (wprmIngredients?.length) parsed.ingredients = wprmIngredients;
+        const wprmNotes = parseWprmNotes(doc);
+        if (wprmNotes) parsed.notes = wprmNotes;
         return parsed;
       }
     } catch {}
@@ -216,6 +241,17 @@ function RecipeCard({ recipe, onClick }) {
 
 function RecipeDetail({ recipe, onEdit, onDelete, onAddToList }) {
   const [tab, setTab] = useState("ingredients");
+  const [checked, setChecked] = useState(() => new Set(recipe.ingredients.map((_, i) => i)));
+
+  const toggleIngredient = i => setChecked(prev => {
+    const next = new Set(prev);
+    next.has(i) ? next.delete(i) : next.add(i);
+    return next;
+  });
+  const allChecked = checked.size === (recipe.ingredients || []).length;
+  const toggleAll = () => setChecked(
+    allChecked ? new Set() : new Set(recipe.ingredients.map((_, i) => i))
+  );
 
   const tabBtn = (t, label) => (
     <button onClick={() => setTab(t)} style={{ flex: 1, padding: "11px 4px", background: "none",
@@ -296,9 +332,26 @@ function RecipeDetail({ recipe, onEdit, onDelete, onAddToList }) {
       <div style={{ background: "#fff", padding: "16px 20px", minHeight: 160 }}>
         {tab === "ingredients" && (
           <>
+            {/* Select-all toggle */}
+            {(recipe.ingredients || []).length > 0 && (
+              <div onClick={toggleAll}
+                style={{ display: "flex", alignItems: "center", gap: 10, paddingBottom: 10,
+                  borderBottom: "1px solid #ececec", cursor: "pointer", userSelect: "none" }}>
+                <input type="checkbox" checked={allChecked} onChange={toggleAll}
+                  style={{ width: 17, height: 17, cursor: "pointer", accentColor: "#1aaae0" }} />
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#999", textTransform: "uppercase", letterSpacing: 0.8 }}>
+                  {allChecked ? "Deselect all" : "Select all"}
+                </span>
+              </div>
+            )}
+
             {(recipe.ingredients || []).map((ing, i) => (
-              <div key={i} style={{ padding: "10px 0", borderBottom: "1px solid #f5f5f5",
-                display: "flex", gap: 14, alignItems: "baseline" }}>
+              <div key={i} onClick={() => toggleIngredient(i)}
+                style={{ padding: "10px 0", borderBottom: "1px solid #f5f5f5",
+                  display: "flex", gap: 12, alignItems: "center", cursor: "pointer",
+                  opacity: checked.has(i) ? 1 : 0.38 }}>
+                <input type="checkbox" checked={checked.has(i)} onChange={() => toggleIngredient(i)}
+                  style={{ width: 17, height: 17, flexShrink: 0, cursor: "pointer", accentColor: "#1aaae0" }} />
                 <div style={{ width: 40, textAlign: "right", fontSize: 14, fontWeight: 700,
                   color: "#333", flexShrink: 0 }}>{ing.qty || "–"}</div>
                 <div>
@@ -307,12 +360,17 @@ function RecipeDetail({ recipe, onEdit, onDelete, onAddToList }) {
                 </div>
               </div>
             ))}
+
             {(recipe.ingredients || []).length > 0 && (
-              <button onClick={() => onAddToList(recipe)}
-                style={{ width: "100%", marginTop: 16, padding: "12px", background: "#e8f6fd",
-                  color: "#1aaae0", border: "none", borderRadius: 10, fontWeight: 700,
-                  fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>
-                + Add all ingredients to grocery list
+              <button
+                onClick={() => onAddToList((recipe.ingredients || []).filter((_, i) => checked.has(i)))}
+                disabled={checked.size === 0}
+                style={{ width: "100%", marginTop: 16, padding: "12px", background: checked.size === 0 ? "#f0f0f0" : "#e8f6fd",
+                  color: checked.size === 0 ? "#bbb" : "#1aaae0", border: "none", borderRadius: 10, fontWeight: 700,
+                  fontSize: 14, cursor: checked.size === 0 ? "default" : "pointer", fontFamily: "inherit" }}>
+                {checked.size === 0
+                  ? "Select ingredients to add"
+                  : `+ Add ${checked.size === (recipe.ingredients || []).length ? "all" : checked.size} ingredient${checked.size !== 1 ? "s" : ""} to grocery list`}
               </button>
             )}
           </>
@@ -333,7 +391,11 @@ function RecipeDetail({ recipe, onEdit, onDelete, onAddToList }) {
 
         {tab === "notes" && (
           <div style={{ fontSize: 15, color: "#333", lineHeight: 1.7 }}>
-            {recipe.notes || <span style={{ color: "#ccc" }}>No notes.</span>}
+            {recipe.notes
+              ? recipe.notes.split("\n").map((line, i) => (
+                  <div key={i} style={{ marginBottom: line.trim() ? 8 : 2 }}>{line}</div>
+                ))
+              : <span style={{ color: "#ccc" }}>No notes.</span>}
           </div>
         )}
       </div>
@@ -614,8 +676,8 @@ export default function RecipesPage({ user, onNavigate, activePage }) {
     }
   };
 
-  const handleAddToList = recipe => {
-    (recipe.ingredients || []).forEach(ing => {
+  const handleAddToList = ingredients => {
+    ingredients.forEach(ing => {
       if (!ing.name.trim()) return;
       addItem({
         name: ing.name.trim(),
