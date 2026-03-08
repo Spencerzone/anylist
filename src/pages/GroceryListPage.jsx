@@ -148,7 +148,7 @@ function AddItemBar({ onAdd, items, user }) {
           onChange={e => handleChange(e.target.value)}
           onKeyDown={e => {
             if (e.key === "Enter" && text.trim()) {
-              suggestions.length > 0 ? quickAdd(suggestions[0].name) : setShowModal(true);
+              quickAdd(suggestions.length > 0 ? suggestions[0].name : text.trim());
             }
           }}
           placeholder="Add Item"
@@ -198,14 +198,14 @@ function AddItemBar({ onAdd, items, user }) {
 // ── Item Row ──────────────────────────────────────────────
 function ItemRow({ item, onToggle, onEdit }) {
   return (
-    <div style={{display:"flex",alignItems:"center",padding:"0 16px",
-      borderBottom:"1px solid #f2f2f2",background:"#fff",minHeight:52}}>
-      <div onClick={() => onToggle(item.id, item.checked)}
-        style={{width:26,height:26,borderRadius:"50%",
+    <div onClick={() => onToggle(item.id, item.checked)}
+      style={{display:"flex",alignItems:"center",padding:"0 16px",
+        borderBottom:"1px solid #f2f2f2",background:"#fff",minHeight:52,cursor:"pointer"}}>
+      <div style={{width:26,height:26,borderRadius:"50%",
           border:item.checked?"none":"2px solid #d0d0d0",
           background:item.checked?"#1aaae0":"transparent",
           display:"flex",alignItems:"center",justifyContent:"center",
-          cursor:"pointer",flexShrink:0,transition:"all 0.18s"}}>
+          flexShrink:0,transition:"all 0.18s"}}>
         {item.checked && <span style={{color:"#fff",fontSize:13,fontWeight:800}}>✓</span>}
       </div>
       <div style={{flex:1,marginLeft:14}}>
@@ -221,7 +221,7 @@ function ItemRow({ item, onToggle, onEdit }) {
           )}
         </div>
       </div>
-      <button onClick={() => onEdit(item)}
+      <button onClick={e => { e.stopPropagation(); onEdit(item); }}
         style={{background:"none",border:"none",cursor:"pointer",
           color:"#1aaae0",fontSize:16,padding:"8px 4px 8px 12px",opacity:0.65}}>
         ✏️
