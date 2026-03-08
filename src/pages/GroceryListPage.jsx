@@ -439,7 +439,7 @@ export default function GroceryListPage({ user, onLogOut }) {
 
   const effectiveCategories = customCategories || DEFAULT_CATEGORIES;
 
-  const displayItems = showChecked ? items : items.filter(i => !i.checked);
+  const displayItems = showChecked ? items : items.filter(i => !i.checked || i.id === toast?.id);
   const remaining = items.filter(i => !i.checked).length;
   const checkedCount = items.filter(i => i.checked).length;
 
