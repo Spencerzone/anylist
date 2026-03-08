@@ -247,9 +247,6 @@ function ItemRow({ item, onToggle, onEdit }) {
         <div style={{display:"flex",gap:8,marginTop:1,flexWrap:"wrap"}}>
           {item.packageSize && <span style={{fontSize:11,color:"#aaa"}}>{item.packageSize}</span>}
           {item.note && <span style={{fontSize:11,color:"#999"}}>{item.note}</span>}
-          {item.addedBy && (
-            <span style={{fontSize:11,color:"#c0c0c0"}}>added by {item.addedBy.split(" ")[0]}</span>
-          )}
         </div>
       </div>
       <button onClick={e => { e.stopPropagation(); onEdit(item); }}
