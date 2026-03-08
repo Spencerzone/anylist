@@ -1,42 +1,7 @@
 // src/pages/GroceryListPage.jsx
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useGroceryList } from "../hooks/useGroceryList";
-
-const DEFAULT_CATEGORIES = [
-  "Baby", "Bakery", "Beverages", "Bread", "Breakfast",
-  "Bunnings", "Canned Goods", "Cleaning", "Condiments & Dressings",
-  "Cooking & Baking", "Dairy", "Deli", "Frozen Foods",
-  "Fruit & Vegetables", "Health & Beauty", "Meat",
-  "Pantry", "Pet", "Seafood", "Snacks", "Other"
-];
-
-const CAT_ICONS = {
-  "Baby": "🍼", "Bakery": "🥐", "Beverages": "🥤", "Bread": "🍞",
-  "Breakfast": "🥣", "Bunnings": "🏠", "Canned Goods": "🥫",
-  "Cleaning": "🧹", "Condiments & Dressings": "🫙", "Cooking & Baking": "🥄",
-  "Dairy": "🧀", "Deli": "🥩", "Frozen Foods": "❄️",
-  "Fruit & Vegetables": "🥦", "Health & Beauty": "💊", "Meat": "🥩",
-  "Pantry": "🏺", "Pet": "🐾", "Seafood": "🐟", "Snacks": "🍿", "Other": "📦"
-};
-
-function guessCategory(name, learned = {}) {
-  const n = name.toLowerCase();
-  if (learned[n]) return learned[n];
-  if (/milk|cheese|yogh|butter|cream|egg/.test(n)) return "Dairy";
-  if (/bread|bun|roll|loaf/.test(n)) return "Bread";
-  if (/chicken|beef|pork|lamb|mince|steak|sausage/.test(n)) return "Meat";
-  if (/salmon|tuna|fish|prawn|seafood/.test(n)) return "Seafood";
-  if (/apple|banana|carrot|tomato|lettuce|potato|onion|spinach|broccoli|capsicum/.test(n)) return "Fruit & Vegetables";
-  if (/frozen|ice cream/.test(n)) return "Frozen Foods";
-  if (/cereal|oats|muesli/.test(n)) return "Breakfast";
-  if (/coffee|tea|juice|water|drink|beer|wine/.test(n)) return "Beverages";
-  if (/nappy|wipe|baby/.test(n)) return "Baby";
-  if (/shampoo|soap|toothpaste|deodorant/.test(n)) return "Health & Beauty";
-  if (/sauce|salsa|mustard|mayo|dressing|vinegar|oil/.test(n)) return "Condiments & Dressings";
-  if (/flour|sugar|baking|yeast|cocoa|vanilla/.test(n)) return "Cooking & Baking";
-  if (/chip|biscuit|cracker|snack|chocolate|lolly|nut/.test(n)) return "Snacks";
-  return "Other";
-}
+import { DEFAULT_CATEGORIES, CAT_ICONS, guessCategory } from "../lib/categories";
 
 // ── Manage Categories Modal ────────────────────────────────
 function ManageCategoriesModal({ categories, items, onSave, onClose }) {
@@ -402,7 +367,7 @@ function CategorySection({ category, items, onToggle, onEdit, toastId }) {
 }
 
 // ── Main Page ─────────────────────────────────────────────
-export default function GroceryListPage({ user, onLogOut }) {
+export default function GroceryListPage({ user, onLogOut, onNavigate, activePage = "lists" }) {
   const { items, loading, addItem, updateItem, toggleCheck, deleteItem, clearChecked, persistedLearned, persistCategory, customCategories, updateCategories } = useGroceryList();
   const [editingItem, setEditingItem] = useState(null);
   const [showChecked, setShowChecked] = useState(false);
@@ -582,10 +547,11 @@ export default function GroceryListPage({ user, onLogOut }) {
       <div style={{display:"flex",background:"#fff",borderTop:"1px solid #e8e8e8",
         position:"sticky",bottom:0}}>
         {[["Lists","☰"],["Recipes","🍴"],["Meal Plan","📅"],["Settings","⚙️"]].map(([tab, icon]) => (
-          <button key={tab} style={{flex:1,padding:"10px 4px 8px",background:"none",border:"none",
+          <button key={tab} onClick={() => onNavigate?.(tab.toLowerCase())}
+            style={{flex:1,padding:"10px 4px 8px",background:"none",border:"none",
             cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
             <span style={{fontSize:20}}>{icon}</span>
-            <span style={{fontSize:10,fontWeight:600,color:tab==="Lists"?"#1aaae0":"#aaa"}}>{tab}</span>
+            <span style={{fontSize:10,fontWeight:600,color:activePage===tab.toLowerCase()?"#1aaae0":"#aaa"}}>{tab}</span>
           </button>
         ))}
       </div>
