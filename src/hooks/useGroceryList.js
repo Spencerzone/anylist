@@ -14,6 +14,7 @@ export function useGroceryList() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [persistedLearned, setPersistedLearned] = useState({});
+  const [customCategories, setCustomCategories] = useState(null);
 
   useEffect(() => {
     const q = query(
@@ -30,10 +31,15 @@ export function useGroceryList() {
 
     const unsubList = onSnapshot(doc(db, "lists", LIST_ID), (snap) => {
       setPersistedLearned(snap.data()?.learnedCategories || {});
+      setCustomCategories(snap.data()?.categories || null);
     });
 
     return () => { unsubItems(); unsubList(); };
   }, []);
+
+  const updateCategories = async (cats) => {
+    await setDoc(doc(db, "lists", LIST_ID), { categories: cats }, { merge: true });
+  };
 
   const persistCategory = async (name, category) => {
     await setDoc(
@@ -80,5 +86,5 @@ export function useGroceryList() {
     await Promise.all(checked.map((i) => deleteItem(i.id)));
   };
 
-  return { items, loading, addItem, updateItem, toggleCheck, deleteItem, clearChecked, persistedLearned, persistCategory };
+  return { items, loading, addItem, updateItem, toggleCheck, deleteItem, clearChecked, persistedLearned, persistCategory, customCategories, updateCategories };
 }

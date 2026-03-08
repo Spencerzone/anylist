@@ -2,7 +2,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useGroceryList } from "../hooks/useGroceryList";
 
-const CATEGORIES = [
+const DEFAULT_CATEGORIES = [
   "Baby", "Bakery", "Beverages", "Bread", "Breakfast",
   "Bunnings", "Canned Goods", "Cleaning", "Condiments & Dressings",
   "Cooking & Baking", "Dairy", "Deli", "Frozen Foods",
@@ -38,13 +38,108 @@ function guessCategory(name, learned = {}) {
   return "Other";
 }
 
+// ── Manage Categories Modal ────────────────────────────────
+function ManageCategoriesModal({ categories, items, onSave, onClose }) {
+  const [cats, setCats] = useState([...categories]);
+  const [newName, setNewName] = useState("");
+  const [renamingIdx, setRenamingIdx] = useState(null);
+  const [renameVal, setRenameVal] = useState("");
+
+  const inUse = cat => items.some(i => i.category === cat);
+
+  const commitRename = () => {
+    const val = renameVal.trim();
+    if (val && val !== cats[renamingIdx] && !cats.includes(val)) {
+      setCats(c => c.map((x, i) => i === renamingIdx ? val : x));
+    }
+    setRenamingIdx(null);
+  };
+
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:1100,
+      display:"flex",alignItems:"flex-end",justifyContent:"center"}}
+      onClick={onClose}>
+      <div style={{background:"#fff",width:"100%",maxWidth:480,borderRadius:"20px 20px 0 0",
+        padding:"20px 0 36px",boxShadow:"0 -4px 40px rgba(0,0,0,0.18)",
+        display:"flex",flexDirection:"column",maxHeight:"82vh"}}
+        onClick={e => e.stopPropagation()}>
+
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",
+          padding:"0 20px 14px",borderBottom:"1px solid #f0f0f0"}}>
+          <span style={{fontSize:17,fontWeight:700,color:"#1a1a2e"}}>Edit Categories</span>
+          <button onClick={onClose} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"#aaa"}}>✕</button>
+        </div>
+
+        <div style={{overflowY:"auto",flex:1}}>
+          {cats.map((cat, i) => {
+            const used = inUse(cat);
+            return (
+              <div key={i} style={{display:"flex",alignItems:"center",gap:10,
+                padding:"9px 20px",borderBottom:"1px solid #f8f8f8"}}>
+                <span style={{fontSize:19,width:28,textAlign:"center",flexShrink:0}}>
+                  {CAT_ICONS[cat] || "🏷️"}
+                </span>
+                {renamingIdx === i
+                  ? <input autoFocus value={renameVal}
+                      onChange={e => setRenameVal(e.target.value)}
+                      onBlur={commitRename}
+                      onKeyDown={e => { if (e.key === "Enter") commitRename(); if (e.key === "Escape") setRenamingIdx(null); }}
+                      style={{flex:1,fontSize:15,border:"1.5px solid #1aaae0",borderRadius:8,
+                        padding:"5px 10px",outline:"none",fontFamily:"inherit"}} />
+                  : <span style={{flex:1,fontSize:15,color:"#333"}}>{cat}</span>
+                }
+                <button onClick={() => !used && (setRenamingIdx(i), setRenameVal(cat))}
+                  title={used ? "In use — move items first" : "Rename"}
+                  style={{background:"none",border:"none",fontSize:15,padding:4,
+                    cursor:used?"default":"pointer",opacity:used?0.25:0.65}}>✏️</button>
+                <button onClick={() => !used && setCats(c => c.filter((_,j) => j !== i))}
+                  title={used ? "In use — move items first" : "Delete"}
+                  style={{background:"none",border:"none",fontSize:15,padding:4,
+                    cursor:used?"default":"pointer",opacity:used?0.2:0.65}}>🗑️</button>
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{padding:"12px 20px 0",borderTop:"1px solid #f0f0f0",display:"flex",gap:8}}>
+          <input value={newName} onChange={e => setNewName(e.target.value)}
+            onKeyDown={e => {
+              const v = newName.trim();
+              if (e.key === "Enter" && v && !cats.includes(v)) { setCats(c => [...c, v]); setNewName(""); }
+            }}
+            placeholder="New category name..."
+            style={{flex:1,padding:"10px 14px",fontSize:14,border:"1.5px solid #e8e8e8",
+              borderRadius:10,outline:"none",fontFamily:"inherit",boxSizing:"border-box"}} />
+          <button
+            onClick={() => { const v = newName.trim(); if (v && !cats.includes(v)) { setCats(c => [...c, v]); setNewName(""); } }}
+            disabled={!newName.trim() || cats.includes(newName.trim())}
+            style={{padding:"10px 18px",background:"#1aaae0",color:"#fff",border:"none",
+              borderRadius:10,fontWeight:700,fontSize:14,cursor:"pointer",
+              opacity:(!newName.trim() || cats.includes(newName.trim())) ? 0.45 : 1}}>
+            Add
+          </button>
+        </div>
+
+        <div style={{padding:"12px 20px 0"}}>
+          <button onClick={() => onSave(cats)}
+            style={{width:"100%",padding:"13px",background:"#1aaae0",color:"#fff",border:"none",
+              borderRadius:12,fontWeight:700,fontSize:15,cursor:"pointer",fontFamily:"inherit"}}>
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Edit / Add Modal ──────────────────────────────────────
-function ItemModal({ item, onSave, onDelete, onClose, user, learnedCategories = {} }) {
+function ItemModal({ item, onSave, onDelete, onClose, user, learnedCategories = {}, categories = DEFAULT_CATEGORIES, onUpdateCategories, items = [] }) {
   const [name, setName] = useState(item?.name || "");
   const [category, setCategory] = useState(item?.category || "Other");
   const [note, setNote] = useState(item?.note || "");
   const [quantity, setQuantity] = useState(item?.quantity || "");
   const [packageSize, setPackageSize] = useState(item?.packageSize || "");
+  const [showManage, setShowManage] = useState(false);
   const nameRef = useRef();
   const isNew = !item?.id;
 
@@ -85,12 +180,29 @@ function ItemModal({ item, onSave, onDelete, onClose, user, learnedCategories = 
 
         {/* Category */}
         <div style={{marginBottom:16}}>
-          <label style={labelStyle}>Category</label>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <label style={labelStyle}>Category</label>
+            {onUpdateCategories && (
+              <button onClick={() => setShowManage(true)}
+                title="Edit categories"
+                style={{background:"none",border:"none",cursor:"pointer",padding:"2px 4px",
+                  fontSize:14,opacity:0.55,lineHeight:1}}>✏️</button>
+            )}
+          </div>
           <select value={category} onChange={e => setCategory(e.target.value)}
             style={{...fieldStyle,background:"#fff",cursor:"pointer"}}>
-            {CATEGORIES.map(c => <option key={c} value={c}>{CAT_ICONS[c]} {c}</option>)}
+            {categories.map(c => <option key={c} value={c}>{CAT_ICONS[c] || "🏷️"} {c}</option>)}
           </select>
         </div>
+
+        {showManage && onUpdateCategories && (
+          <ManageCategoriesModal
+            categories={categories}
+            items={items}
+            onSave={async cats => { await onUpdateCategories(cats); setShowManage(false); }}
+            onClose={() => setShowManage(false)}
+          />
+        )}
 
         {/* Quantity + Package Size side by side */}
         <div style={{display:"flex",gap:12,marginBottom:16}}>
@@ -147,7 +259,7 @@ function ItemModal({ item, onSave, onDelete, onClose, user, learnedCategories = 
 }
 
 // ── Add Item Bar ──────────────────────────────────────────
-function AddItemBar({ onAdd, items, user, learnedCategories = {} }) {
+function AddItemBar({ onAdd, items, user, learnedCategories = {}, categories = DEFAULT_CATEGORIES, onUpdateCategories }) {
   const [text, setText] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
@@ -218,6 +330,9 @@ function AddItemBar({ onAdd, items, user, learnedCategories = {} }) {
           onSave={(newItem, u) => { onAdd(newItem, u); setText(""); setShowModal(false); }}
           onClose={() => setShowModal(false)}
           user={user}
+          categories={categories}
+          onUpdateCategories={onUpdateCategories}
+          items={items}
         />
       )}
     </div>
@@ -285,7 +400,7 @@ function CategorySection({ category, items, onToggle, onEdit }) {
 
 // ── Main Page ─────────────────────────────────────────────
 export default function GroceryListPage({ user, onLogOut }) {
-  const { items, loading, addItem, updateItem, toggleCheck, deleteItem, clearChecked, persistedLearned, persistCategory } = useGroceryList();
+  const { items, loading, addItem, updateItem, toggleCheck, deleteItem, clearChecked, persistedLearned, persistCategory, customCategories, updateCategories } = useGroceryList();
   const [editingItem, setEditingItem] = useState(null);
   const [showChecked, setShowChecked] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -295,6 +410,8 @@ export default function GroceryListPage({ user, onLogOut }) {
     ...persistedLearned,
     ...Object.fromEntries(items.map(i => [i.name.toLowerCase(), i.category]))
   }), [items, persistedLearned]);
+
+  const effectiveCategories = customCategories || DEFAULT_CATEGORIES;
 
   const displayItems = showChecked ? items : items.filter(i => !i.checked);
   const remaining = items.filter(i => !i.checked).length;
@@ -385,7 +502,8 @@ export default function GroceryListPage({ user, onLogOut }) {
       </div>
 
       {/* Add Bar */}
-      <AddItemBar onAdd={addItem} items={items} user={user} learnedCategories={learnedCategories} />
+      <AddItemBar onAdd={addItem} items={items} user={user} learnedCategories={learnedCategories}
+        categories={effectiveCategories} onUpdateCategories={updateCategories} />
 
       {/* List */}
       <div style={{flex:1,overflowY:"auto"}}>
@@ -412,6 +530,7 @@ export default function GroceryListPage({ user, onLogOut }) {
       {/* Edit Modal */}
       {editingItem && (
         <ItemModal item={editingItem} onSave={handleSave} learnedCategories={learnedCategories}
+          categories={effectiveCategories} onUpdateCategories={updateCategories} items={items}
           onDelete={async (id) => { await deleteItem(id); setEditingItem(null); }}
           onClose={() => setEditingItem(null)} user={user} />
       )}
