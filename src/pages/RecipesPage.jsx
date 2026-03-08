@@ -29,19 +29,40 @@ function findRecipeInJsonLd(data) {
   return null;
 }
 
+function flattenInstructions(instructions) {
+  const steps = [];
+  for (const item of (instructions || [])) {
+    if (typeof item === "string") {
+      if (item.trim()) steps.push(item.trim());
+    } else if (item["@type"] === "HowToStep" || (item.text && !item.itemListElement)) {
+      const text = item.text || item.name || "";
+      if (text.trim()) steps.push(text.trim());
+    } else if (item.itemListElement) {
+      // HowToSection — skip the heading, recurse into nested steps
+      steps.push(...flattenInstructions(item.itemListElement));
+    } else {
+      const text = item.text || "";
+      if (text.trim()) steps.push(text.trim());
+    }
+  }
+  return steps;
+}
+
 function parseRecipeJsonLd(recipe, sourceUrl) {
   const photos = recipe.image;
   const photoUrl = Array.isArray(photos)
     ? (typeof photos[0] === "string" ? photos[0] : photos[0]?.url || "")
     : (typeof photos === "string" ? photos : photos?.url || "");
 
-  const ingredients = (recipe.recipeIngredient || []).map(s => ({
-    qty: "", name: s.trim(), note: ""
-  }));
+  const ingredients = (recipe.recipeIngredient || []).map(s => {
+    s = s.trim();
+    // Parse leading quantity: mixed numbers (2 1/4), fractions (1/2), decimals (1.5), integers (4)
+    const m = s.match(/^(\d+(?:\.\d+)?(?:\s+\d+\/\d+)?(?:\/\d+)?)\s*/);
+    if (m) return { qty: m[1].trim(), name: s.slice(m[0].length).trim(), note: "" };
+    return { qty: "", name: s, note: "" };
+  });
 
-  const steps = (recipe.recipeInstructions || [])
-    .map(s => typeof s === "string" ? s : s.text || s.name || "")
-    .filter(Boolean);
+  const steps = flattenInstructions(recipe.recipeInstructions);
 
   let servings = recipe.recipeYield || "";
   if (Array.isArray(servings)) servings = servings[0];
