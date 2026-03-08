@@ -113,11 +113,23 @@ function parseWprmIngredients(doc) {
   });
 }
 
+async function fetchViaProxy(url) {
+  const proxies = [
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+  ];
+  for (const proxyUrl of proxies) {
+    try {
+      const res = await fetch(proxyUrl);
+      if (res.ok) return res.text();
+    } catch {}
+  }
+  throw new Error("Could not fetch page — all proxies failed. Try copying the details manually.");
+}
+
 async function importRecipeFromUrl(url) {
-  const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-  const res = await fetch(proxyUrl);
-  if (!res.ok) throw new Error(`Could not fetch page (HTTP ${res.status})`);
-  const html = await res.text();
+  const html = await fetchViaProxy(url);
 
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, "text/html");
