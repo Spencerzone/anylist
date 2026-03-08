@@ -289,6 +289,7 @@ export default function GroceryListPage({ user, onLogOut }) {
   const [editingItem, setEditingItem] = useState(null);
   const [showChecked, setShowChecked] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showDotMenu, setShowDotMenu] = useState(false);
 
   const learnedCategories = useMemo(() =>
     Object.fromEntries(items.map(i => [i.name.toLowerCase(), i.category])),
@@ -339,8 +340,30 @@ export default function GroceryListPage({ user, onLogOut }) {
               </div>
             </div>
           </div>
-          <button style={{background:"none",border:"none",color:"#fff",fontSize:22,cursor:"pointer"}}>⋮</button>
+          <button onClick={() => setShowDotMenu(m => !m)}
+            style={{background:"none",border:"none",color:"#fff",fontSize:22,cursor:"pointer",padding:"4px 8px"}}>⋮</button>
         </div>
+
+        {showDotMenu && (
+          <div style={{marginTop:12,background:"rgba(0,0,0,0.15)",borderRadius:12,padding:"8px 4px"}}>
+            <button onClick={() => { setShowChecked(s => !s); setShowDotMenu(false); }}
+              style={{width:"100%",background:"none",border:"none",color:"#fff",fontSize:14,
+                fontWeight:600,cursor:"pointer",padding:"10px 14px",textAlign:"left",borderRadius:8,
+                display:"flex",alignItems:"center",gap:10}}>
+              <span style={{fontSize:18}}>{showChecked ? "🙈" : "👁"}</span>
+              {showChecked ? "Hide checked items" : "Show checked items"}
+            </button>
+            {checkedCount > 0 && (
+              <button onClick={() => { clearChecked(); setShowDotMenu(false); }}
+                style={{width:"100%",background:"none",border:"none",color:"#ffaaaa",fontSize:14,
+                  fontWeight:600,cursor:"pointer",padding:"10px 14px",textAlign:"left",borderRadius:8,
+                  display:"flex",alignItems:"center",gap:10}}>
+                <span style={{fontSize:18}}>🗑️</span>
+                Clear {checkedCount} checked item{checkedCount !== 1 ? "s" : ""}
+              </button>
+            )}
+          </div>
+        )}
 
         {showUserMenu && (
           <div style={{marginTop:12,background:"rgba(0,0,0,0.15)",borderRadius:12,padding:"10px 14px"}}>
@@ -357,25 +380,6 @@ export default function GroceryListPage({ user, onLogOut }) {
               Sign Out
             </button>
           </div>
-        )}
-      </div>
-
-      {/* Toolbar */}
-      <div style={{display:"flex",alignItems:"center",gap:6,padding:"8px 12px",
-        background:"#fff",borderBottom:"1px solid #ececec"}}>
-        <div style={{flex:1}} />
-        <button onClick={() => setShowChecked(s => !s)}
-          title={showChecked ? "Hide checked" : "Show checked"}
-          style={{background:"none",border:"none",fontSize:18,cursor:"pointer",
-            color:showChecked?"#1aaae0":"#ccc",padding:6}}>
-          👁
-        </button>
-        {checkedCount > 0 && (
-          <button onClick={clearChecked}
-            style={{background:"none",border:"1px solid #e0e0e0",color:"#e53935",
-              borderRadius:16,padding:"4px 12px",fontSize:12,cursor:"pointer",fontWeight:600}}>
-            Clear {checkedCount} ✓
-          </button>
         )}
       </div>
 
