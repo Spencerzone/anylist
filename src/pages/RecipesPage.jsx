@@ -81,6 +81,30 @@ function parseRecipeJsonLd(recipe, sourceUrl) {
   };
 }
 
+// Parse WPRM ingredient HTML, preferring metric data-attributes when available.
+// Returns null if no WPRM ingredient elements are found.
+function parseWprmIngredients(doc) {
+  const items = doc.querySelectorAll("li.wprm-recipe-ingredient");
+  if (!items.length) return null;
+
+  return Array.from(items).map(li => {
+    const amountEl = li.querySelector(".wprm-recipe-ingredient-amount");
+    const unitEl   = li.querySelector(".wprm-recipe-ingredient-unit");
+    const nameEl   = li.querySelector(".wprm-recipe-ingredient-name");
+    const notesEl  = li.querySelector(".wprm-recipe-ingredient-notes, .wprm-recipe-ingredient-comment");
+
+    // Prefer metric data attributes (WPRM Pro unit-conversion feature);
+    // fall back to the displayed (cups/imperial) text.
+    const qty  = (amountEl?.getAttribute("data-amount-metric") || amountEl?.textContent || "").trim();
+    const unit = (unitEl?.getAttribute("data-unit-metric")     || unitEl?.textContent   || "").trim();
+    const name = (nameEl?.textContent || "").trim();
+    const note = (notesEl?.textContent || "").trim();
+
+    const fullName = [unit, name].filter(Boolean).join(" ");
+    return { qty, name: fullName, note };
+  });
+}
+
 async function importRecipeFromUrl(url) {
   const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
   const res = await fetch(proxyUrl);
@@ -95,7 +119,14 @@ async function importRecipeFromUrl(url) {
     try {
       const data = JSON.parse(script.textContent);
       const recipe = findRecipeInJsonLd(data);
-      if (recipe) return parseRecipeJsonLd(recipe, url);
+      if (recipe) {
+        const parsed = parseRecipeJsonLd(recipe, url);
+        // WPRM HTML gives us pre-split amount/unit/name and metric values;
+        // prefer it over the combined JSON-LD ingredient strings.
+        const wprmIngredients = parseWprmIngredients(doc);
+        if (wprmIngredients?.length) parsed.ingredients = wprmIngredients;
+        return parsed;
+      }
     } catch {}
   }
   throw new Error("No recipe data found on this page. Try copying the details manually.");
