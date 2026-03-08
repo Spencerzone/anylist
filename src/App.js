@@ -1,12 +1,14 @@
 // src/App.js
+import { useState } from "react";
 import { useAuth } from "./hooks/useAuth";
 import LoginPage from "./pages/LoginPage";
 import GroceryListPage from "./pages/GroceryListPage";
+import RecipesPage from "./pages/RecipesPage";
 
 export default function App() {
   const { user, signIn, logOut } = useAuth();
+  const [page, setPage] = useState("lists");
 
-  // Loading state
   if (user === undefined) {
     return (
       <div style={{
@@ -20,5 +22,9 @@ export default function App() {
 
   if (!user) return <LoginPage onSignIn={signIn} />;
 
-  return <GroceryListPage user={user} onLogOut={logOut} />;
+  if (page === "recipes") {
+    return <RecipesPage user={user} onNavigate={setPage} activePage={page} />;
+  }
+
+  return <GroceryListPage user={user} onLogOut={logOut} onNavigate={setPage} activePage={page} />;
 }
