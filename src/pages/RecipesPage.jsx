@@ -617,6 +617,146 @@ function RecipeForm({ initial, onSave, user }) {
   );
 }
 
+// ── Pantry Search ───────────────────────────────────────────
+
+function scorePantry(recipe, items) {
+  const ingText = (recipe.ingredients || []).map(i => i.name.toLowerCase()).join("\n");
+  const matched = items.filter(p => ingText.includes(p));
+  return { count: matched.length, matched };
+}
+
+function PantrySearch({ recipes, pantryItems, setPantryItems, onSelectRecipe }) {
+  const [input, setInput] = useState("");
+
+  const addItem = () => {
+    const v = input.trim().toLowerCase();
+    if (v && !pantryItems.includes(v)) setPantryItems(prev => [...prev, v]);
+    setInput("");
+  };
+
+  const scored = recipes
+    .map(r => ({ recipe: r, ...scorePantry(r, pantryItems) }))
+    .sort((a, b) => b.count - a.count);
+
+  const withMatch    = scored.filter(s => s.count > 0);
+  const withoutMatch = scored.filter(s => s.count === 0);
+
+  return (
+    <div style={{ flex: 1, overflowY: "auto" }}>
+      {/* Ingredient input */}
+      <div style={{ background: "#fff", padding: "14px 16px 16px", marginBottom: 2 }}>
+        <div style={labelStyle}>Ingredients you have</div>
+        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+          <input value={input} onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addItem(); } }}
+            placeholder="e.g. chicken, spinach, lemon…"
+            style={{ ...fieldStyle, flex: 1 }} />
+          <button onClick={addItem} disabled={!input.trim()}
+            style={{ padding: "10px 16px", background: input.trim() ? "#1aaae0" : "#c8e8f5",
+              color: "#fff", border: "none", borderRadius: 10, fontWeight: 700,
+              cursor: input.trim() ? "pointer" : "default", fontFamily: "inherit", flexShrink: 0 }}>
+            Add
+          </button>
+        </div>
+
+        {pantryItems.length > 0 && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10, alignItems: "center" }}>
+            {pantryItems.map(item => (
+              <span key={item}
+                style={{ background: "#e8f6fd", color: "#1aaae0", borderRadius: 20,
+                  padding: "4px 8px 4px 12px", fontSize: 13, fontWeight: 600,
+                  display: "inline-flex", alignItems: "center", gap: 5 }}>
+                {item}
+                <button onClick={() => setPantryItems(prev => prev.filter(i => i !== item))}
+                  style={{ background: "none", border: "none", color: "#1aaae0",
+                    cursor: "pointer", padding: 0, fontSize: 16, lineHeight: 1, fontFamily: "inherit" }}>×</button>
+              </span>
+            ))}
+            <button onClick={() => setPantryItems([])}
+              style={{ background: "none", border: "none", color: "#bbb",
+                fontSize: 12, cursor: "pointer", padding: "4px 6px", fontFamily: "inherit" }}>
+              Clear all
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Results */}
+      {pantryItems.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "50px 24px", color: "#bbb", fontSize: 14, lineHeight: 1.6 }}>
+          Add ingredients above to find recipes that use them.
+        </div>
+      ) : withMatch.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "40px 24px", color: "#bbb", fontSize: 14, lineHeight: 1.6 }}>
+          None of your recipes use those ingredients.<br />Try different keywords.
+        </div>
+      ) : (
+        <div style={{ padding: "8px 14px 16px" }}>
+          {withMatch.map(({ recipe, count, matched }) => (
+            <div key={recipe.id} onClick={() => onSelectRecipe(recipe)}
+              style={{ background: "#fff", borderRadius: 12, marginBottom: 10,
+                boxShadow: "0 1px 5px rgba(0,0,0,0.06)", cursor: "pointer",
+                display: "flex", gap: 12, padding: "12px 14px", alignItems: "center" }}>
+              {recipe.photoUrl
+                ? <img src={recipe.photoUrl} alt=""
+                    style={{ width: 56, height: 56, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
+                : <div style={{ width: 56, height: 56, borderRadius: 8, background: "#e8f4fb",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 28, flexShrink: 0 }}>🍽️</div>
+              }
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#1a1a2e", marginBottom: 5,
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {recipe.name}
+                </div>
+                <div style={{ display: "inline-flex", alignItems: "center",
+                  background: count >= 3 ? "#e6f9f0" : count >= 2 ? "#e8f6fd" : "#f5f5f5",
+                  color: count >= 3 ? "#1a9e5c" : count >= 2 ? "#1aaae0" : "#888",
+                  borderRadius: 20, padding: "3px 9px", fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
+                  {count} {count === 1 ? "ingredient" : "ingredients"} matched
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                  {matched.map(m => (
+                    <span key={m} style={{ fontSize: 11, color: "#666", background: "#f0f0f0",
+                      borderRadius: 10, padding: "2px 7px" }}>{m}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {withoutMatch.length > 0 && (
+            <div style={{ marginTop: 4, paddingTop: 14, borderTop: "1px solid #ececec" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#ccc",
+                textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 10 }}>
+                No matching ingredients
+              </div>
+              {withoutMatch.map(({ recipe }) => (
+                <div key={recipe.id} onClick={() => onSelectRecipe(recipe)}
+                  style={{ background: "#fff", borderRadius: 10, marginBottom: 8,
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.04)", cursor: "pointer", opacity: 0.45,
+                    display: "flex", gap: 10, padding: "10px 12px", alignItems: "center" }}>
+                  {recipe.photoUrl
+                    ? <img src={recipe.photoUrl} alt=""
+                        style={{ width: 40, height: 40, borderRadius: 6, objectFit: "cover", flexShrink: 0 }} />
+                    : <div style={{ width: 40, height: 40, borderRadius: 6, background: "#e8f4fb",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 22, flexShrink: 0 }}>🍽️</div>
+                  }
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1a2e",
+                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {recipe.name}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Bottom Nav ─────────────────────────────────────────────
 
 function BottomNav({ activePage, onNavigate }) {
@@ -642,21 +782,25 @@ export default function RecipesPage({ user, onNavigate, activePage }) {
   const { recipes, loading, addRecipe, updateRecipe, deleteRecipe } = useRecipes();
   const { addItem, persistedLearned } = useGroceryList();
 
-  const [view, setView] = useState("list"); // "list" | "detail" | "form"
+  const [view, setView] = useState("list"); // "list" | "detail" | "form" | "pantry"
   const [selected, setSelected] = useState(null);
   const [search, setSearch] = useState("");
   const [showSearch, setShowSearch] = useState(false);
+  const [fromView, setFromView] = useState("list");
+  const [pantryItems, setPantryItems] = useState([]);
 
   const filtered = recipes.filter(r =>
     r.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const openDetail = recipe => { setSelected(recipe); setView("detail"); };
+  const openDetail = recipe => { setFromView(view); setSelected(recipe); setView("detail"); };
   const openEdit = () => setView("form");
   const openNew = () => { setSelected(null); setView("form"); };
 
   const handleBack = () => {
+    if (view === "pantry") { setView("list"); return; }
     if (view === "form" && selected?.id) { setView("detail"); return; }
+    if (view === "detail") { setView(fromView); return; }
     setView("list");
   };
 
@@ -693,7 +837,9 @@ export default function RecipesPage({ user, onNavigate, activePage }) {
 
   const title = view === "form"
     ? (selected?.id ? "Edit Recipe" : "New Recipe")
-    : view === "detail" ? "Recipe Details" : "Recipes";
+    : view === "detail" ? "Recipe Details"
+    : view === "pantry" ? "Find by Ingredients"
+    : "Recipes";
 
   return (
     <div style={{ maxWidth: 480, margin: "0 auto", minHeight: "100vh", background: "#f0f2f5",
@@ -718,6 +864,9 @@ export default function RecipesPage({ user, onNavigate, activePage }) {
               <button onClick={openNew}
                 style={{ background: "none", border: "none", color: "#fff",
                   fontSize: 26, cursor: "pointer", padding: 4, lineHeight: 1 }}>+</button>
+              <button onClick={() => setView("pantry")}
+                style={{ background: "none", border: "none", color: "#fff",
+                  fontSize: 20, cursor: "pointer", padding: 4 }} title="Find by ingredients">🥦</button>
             </>
           )}
         </div>
@@ -745,6 +894,15 @@ export default function RecipesPage({ user, onNavigate, activePage }) {
               : <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, padding: 14 }}>
                   {filtered.map(r => <RecipeCard key={r.id} recipe={r} onClick={openDetail} />)}
                 </div>
+        )}
+
+        {view === "pantry" && (
+          <PantrySearch
+            recipes={recipes}
+            pantryItems={pantryItems}
+            setPantryItems={setPantryItems}
+            onSelectRecipe={openDetail}
+          />
         )}
 
         {view === "detail" && selected && (
