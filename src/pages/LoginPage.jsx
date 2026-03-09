@@ -14,7 +14,7 @@ export default function LoginPage({ onSignIn }) {
       }}>
         <div style={{ fontSize: 56, marginBottom: 8 }}>🛒</div>
         <h1 style={{ margin: "0 0 6px", fontSize: 26, fontWeight: 800, color: "#1a1a2e" }}>
-          Family List
+          FoodList
         </h1>
         <p style={{ margin: "0 0 32px", color: "#888", fontSize: 14 }}>
           Your shared grocery & meal planner
