@@ -1,7 +1,7 @@
 {
-  "short_name": "Family List",
-  "name": "Family Grocery & Meal Planner",
-  "description": "Shared grocery list and meal planner for the family",
+  "short_name": "FoodList",
+  "name": "FoodList — Grocery & Meal Planner",
+  "description": "Shared grocery list and meal planner",
   "icons": [
     {
       "src": "icon-192.png",
