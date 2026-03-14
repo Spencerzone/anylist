@@ -203,7 +203,7 @@ function ItemModal({ item, onSave, onDelete, onClose, user, learnedCategories = 
 
         <div style={{display:"flex",gap:10,marginTop:4}}>
           {!isNew && (
-            <button onClick={() => onDelete(item.id)}
+            <button onClick={() => onDelete(item)}
               style={{flex:1,padding:"13px",background:"#fff",color:"#e53935",
                 border:"1.5px solid #e53935",borderRadius:12,fontWeight:700,
                 fontSize:15,cursor:"pointer",fontFamily:"inherit"}}>
@@ -366,15 +366,130 @@ function CategorySection({ category, items, onToggle, onEdit, toastId }) {
   );
 }
 
+// ── History Panel ─────────────────────────────────────────
+function HistoryPanel({ onClose, onReAdd, fetchHistory, clearHistory }) {
+  const [historyItems, setHistoryItems] = useState(null);
+  const [clearing, setClearing] = useState(false);
+
+  useEffect(() => {
+    fetchHistory().then(setHistoryItems).catch(() => setHistoryItems([]));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const groups = useMemo(() => {
+    if (!historyItems) return null;
+    const now = new Date();
+    const today     = new Date(now); today.setHours(0,0,0,0);
+    const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+    const map = {};
+    const order = [];
+    for (const item of historyItems) {
+      const d = item.clearedAt?.toDate?.() || new Date();
+      const day = new Date(d); day.setHours(0,0,0,0);
+      let label;
+      if (day >= today)     label = "Today";
+      else if (day >= yesterday) label = "Yesterday";
+      else label = d.toLocaleDateString("en-AU", { weekday:"long", day:"numeric", month:"short" });
+      if (!map[label]) { map[label] = []; order.push(label); }
+      map[label].push(item);
+    }
+    return order.map(label => ({ label, items: map[label] }));
+  }, [historyItems]);
+
+  const handleClearAll = async () => {
+    setClearing(true);
+    await clearHistory();
+    setHistoryItems([]);
+    setClearing(false);
+  };
+
+  return (
+    <>
+      <div onClick={onClose}
+        style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",zIndex:1000}} />
+      <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",
+        width:"100%",maxWidth:480,background:"#fff",borderRadius:"20px 20px 0 0",
+        zIndex:1001,maxHeight:"78vh",display:"flex",flexDirection:"column"}}>
+
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",
+          padding:"18px 20px 14px",borderBottom:"1px solid #f0f0f0",flexShrink:0}}>
+          <span style={{fontSize:17,fontWeight:700,color:"#1a1a2e"}}>Recently Cleared</span>
+          <button onClick={onClose}
+            style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"#aaa"}}>✕</button>
+        </div>
+
+        <div style={{flex:1,overflowY:"auto"}}>
+          {!historyItems ? (
+            <div style={{textAlign:"center",padding:40,color:"#aaa",fontSize:14}}>Loading…</div>
+          ) : historyItems.length === 0 ? (
+            <div style={{textAlign:"center",padding:"50px 24px",color:"#bbb",fontSize:14,lineHeight:1.6}}>
+              No cleared items in the last 30 days.
+            </div>
+          ) : groups?.map(({ label, items: groupItems }) => (
+            <div key={label}>
+              <div style={{fontSize:11,fontWeight:700,color:"#bbb",textTransform:"uppercase",
+                letterSpacing:0.8,padding:"12px 20px 6px"}}>{label}</div>
+              {groupItems.map(item => (
+                <div key={item.id}
+                  style={{display:"flex",alignItems:"center",padding:"10px 16px",
+                    borderBottom:"1px solid #f5f5f5"}}>
+                  <span style={{fontSize:20,width:30,textAlign:"center",flexShrink:0}}>
+                    {CAT_ICONS[item.category] || "🏷️"}
+                  </span>
+                  <div style={{flex:1,marginLeft:12,minWidth:0}}>
+                    <div style={{fontSize:15,color:"#1a1a2e",fontWeight:500}}>{item.name}</div>
+                    {(item.quantity || item.note || item.packageSize) && (
+                      <div style={{fontSize:11,color:"#aaa",marginTop:1}}>
+                        {[item.quantity && `×${item.quantity}`, item.packageSize, item.note]
+                          .filter(Boolean).join(" · ")}
+                      </div>
+                    )}
+                  </div>
+                  <button onClick={() => onReAdd(item)}
+                    style={{background:"#e8f6fd",color:"#1aaae0",border:"none",
+                      borderRadius:8,padding:"6px 12px",fontWeight:700,fontSize:13,
+                      cursor:"pointer",flexShrink:0,fontFamily:"inherit"}}>
+                    + Re-add
+                  </button>
+                </div>
+              ))}
+            </div>
+          ))}
+          <div style={{height:16}} />
+        </div>
+
+        {historyItems?.length > 0 && (
+          <div style={{padding:"12px 20px 28px",borderTop:"1px solid #f0f0f0",flexShrink:0}}>
+            <button onClick={handleClearAll} disabled={clearing}
+              style={{width:"100%",padding:"12px",background:"#fff5f5",color:"#e53935",
+                border:"none",borderRadius:10,fontWeight:700,fontSize:14,
+                cursor:clearing?"default":"pointer",fontFamily:"inherit"}}>
+              {clearing ? "Clearing…" : "Clear all history"}
+            </button>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────
 export default function GroceryListPage({ user, onLogOut, onNavigate, activePage = "lists" }) {
-  const { items, loading, addItem, updateItem, toggleCheck, deleteItem, clearChecked, persistedLearned, persistCategory, customCategories, updateCategories } = useGroceryList();
+  const { items, loading, addItem, updateItem, toggleCheck, deleteItem, clearChecked,
+          fetchHistory, clearHistory, persistedLearned, persistCategory,
+          customCategories, updateCategories } = useGroceryList();
   const [editingItem, setEditingItem] = useState(null);
   const [showChecked, setShowChecked] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showDotMenu, setShowDotMenu] = useState(false);
   const [toast, setToast] = useState(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const [notifBanner, setNotifBanner] = useState(() => {
+    if (typeof Notification === "undefined") return false;
+    if (Notification.permission !== "default") return false;
+    return localStorage.getItem("notifPermAsked") !== "dismissed";
+  });
   const toastTimer = useRef(null);
+  const prevItemsRef = useRef(null);
 
   const handleToggle = (id, currentChecked) => {
     toggleCheck(id, currentChecked);
@@ -396,6 +511,24 @@ export default function GroceryListPage({ user, onLogOut, onNavigate, activePage
       setToast(null);
     }
   };
+
+  // Fire a browser notification when another user adds items (app open in background tab).
+  useEffect(() => {
+    if (loading) return;
+    if (prevItemsRef.current === null) { prevItemsRef.current = items; return; }
+    const prevIds = new Set(prevItemsRef.current.map(i => i.id));
+    const addedByOther = items.filter(i => !prevIds.has(i.id) && i.addedByUid !== user?.uid);
+    if (addedByOther.length && Notification.permission === "granted") {
+      const by    = addedByOther[0].addedBy;
+      const names = addedByOther.map(i => i.name).join(", ");
+      new Notification("FoodList", {
+        body: `${by} added: ${names}`,
+        icon: "/icon-192.png",
+        tag:  "foodlist-add",
+      });
+    }
+    prevItemsRef.current = items;
+  }, [items, loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const learnedCategories = useMemo(() => ({
     ...persistedLearned,
@@ -449,8 +582,13 @@ export default function GroceryListPage({ user, onLogOut, onNavigate, activePage
               </div>
             </div>
           </div>
-          <button onClick={() => setShowDotMenu(m => !m)}
-            style={{background:"none",border:"none",color:"#fff",fontSize:22,cursor:"pointer",padding:"4px 8px"}}>⋮</button>
+          <div style={{display:"flex",gap:0}}>
+            <button onClick={() => setShowHistory(true)}
+              style={{background:"none",border:"none",color:"#fff",fontSize:19,cursor:"pointer",padding:"4px 8px",opacity:0.9}}
+              title="Recently cleared">🕐</button>
+            <button onClick={() => setShowDotMenu(m => !m)}
+              style={{background:"none",border:"none",color:"#fff",fontSize:22,cursor:"pointer",padding:"4px 8px"}}>⋮</button>
+          </div>
         </div>
 
         {showDotMenu && (
@@ -463,7 +601,7 @@ export default function GroceryListPage({ user, onLogOut, onNavigate, activePage
               {showChecked ? "Hide checked items" : "Show checked items"}
             </button>
             {checkedCount > 0 && (
-              <button onClick={() => { clearChecked(); setShowDotMenu(false); }}
+              <button onClick={() => { clearChecked(user); setShowDotMenu(false); }}
                 style={{width:"100%",background:"none",border:"none",color:"#ffaaaa",fontSize:14,
                   fontWeight:600,cursor:"pointer",padding:"10px 14px",textAlign:"left",borderRadius:8,
                   display:"flex",alignItems:"center",gap:10}}>
@@ -496,6 +634,33 @@ export default function GroceryListPage({ user, onLogOut, onNavigate, activePage
       <AddItemBar onAdd={addItem} items={items} user={user} learnedCategories={learnedCategories}
         categories={effectiveCategories} onUpdateCategories={updateCategories} />
 
+      {/* Notification permission banner */}
+      {notifBanner && (
+        <div style={{background:"#fffbe6",borderBottom:"1px solid #ffe58f",padding:"10px 14px",
+          display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+          <span style={{fontSize:18}}>🔔</span>
+          <span style={{flex:1,fontSize:13,color:"#555",lineHeight:1.4}}>
+            Get notified when your partner adds items
+          </span>
+          <button
+            onClick={async () => {
+              const perm = await Notification.requestPermission();
+              localStorage.setItem("notifPermAsked", perm === "granted" ? "granted" : "dismissed");
+              setNotifBanner(false);
+            }}
+            style={{background:"#1aaae0",color:"#fff",border:"none",borderRadius:8,
+              padding:"6px 14px",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>
+            Enable
+          </button>
+          <button
+            onClick={() => { localStorage.setItem("notifPermAsked","dismissed"); setNotifBanner(false); }}
+            style={{background:"none",border:"none",color:"#aaa",fontSize:13,cursor:"pointer",
+              padding:"6px 4px",fontFamily:"inherit"}}>
+            Not now
+          </button>
+        </div>
+      )}
+
       {/* List */}
       <div style={{flex:1,overflowY:"auto"}}>
         {loading ? (
@@ -518,11 +683,25 @@ export default function GroceryListPage({ user, onLogOut, onNavigate, activePage
         <div style={{height:90}} />
       </div>
 
+      {/* History Panel */}
+      {showHistory && (
+        <HistoryPanel
+          onClose={() => setShowHistory(false)}
+          onReAdd={async (item) => {
+            await addItem({ name: item.name, category: item.category, note: item.note || "",
+              quantity: item.quantity || "", packageSize: item.packageSize || "", emoji: item.emoji || "" }, user);
+            setShowHistory(false);
+          }}
+          fetchHistory={fetchHistory}
+          clearHistory={clearHistory}
+        />
+      )}
+
       {/* Edit Modal */}
       {editingItem && (
         <ItemModal item={editingItem} onSave={handleSave} learnedCategories={learnedCategories}
           categories={effectiveCategories} onUpdateCategories={updateCategories} items={items}
-          onDelete={async (id) => { await deleteItem(id); setEditingItem(null); }}
+          onDelete={async (item) => { await deleteItem(item, user); setEditingItem(null); }}
           onClose={() => setEditingItem(null)} user={user} />
       )}
 

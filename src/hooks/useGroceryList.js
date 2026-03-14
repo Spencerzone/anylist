@@ -2,12 +2,11 @@
 import { useState, useEffect } from "react";
 import {
   collection, onSnapshot, addDoc, updateDoc,
-  deleteDoc, doc, setDoc, serverTimestamp, query, orderBy
+  deleteDoc, doc, setDoc, serverTimestamp, query, orderBy,
+  getDocs, where, writeBatch, Timestamp
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 
-// All family members share one list ID. 
-// In a future version this can be per-household with invites.
 const LIST_ID = "shared-family-list";
 
 export function useGroceryList() {
@@ -77,14 +76,52 @@ export function useGroceryList() {
     });
   };
 
-  const deleteItem = async (id) => {
-    await deleteDoc(doc(db, "lists", LIST_ID, "items", id));
+  // Archive item to history then remove it from the list.
+  // item must be the full item object; user provides clearedBy metadata.
+  const deleteItem = async (item, user) => {
+    await addDoc(collection(db, "lists", LIST_ID, "history"), {
+      name:        item.name        || "",
+      category:    item.category    || "",
+      note:        item.note        || "",
+      quantity:    item.quantity    || "",
+      packageSize: item.packageSize || "",
+      emoji:       item.emoji       || "",
+      clearedAt:   serverTimestamp(),
+      clearedBy:   user?.displayName || user?.email || "Someone",
+    });
+    await deleteDoc(doc(db, "lists", LIST_ID, "items", item.id));
   };
 
-  const clearChecked = async () => {
+  const clearChecked = async (user) => {
     const checked = items.filter((i) => i.checked);
-    await Promise.all(checked.map((i) => deleteItem(i.id)));
+    await Promise.all(checked.map((i) => deleteItem(i, user)));
   };
 
-  return { items, loading, addItem, updateItem, toggleCheck, deleteItem, clearChecked, persistedLearned, persistCategory, customCategories, updateCategories };
+  // One-time fetch of history items from the last 30 days, newest first.
+  const fetchHistory = async () => {
+    const cutoff = Timestamp.fromDate(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
+    const q = query(
+      collection(db, "lists", LIST_ID, "history"),
+      where("clearedAt", ">=", cutoff),
+      orderBy("clearedAt", "desc")
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  };
+
+  // Batch-delete every document in the history subcollection.
+  const clearHistory = async () => {
+    const snap = await getDocs(collection(db, "lists", LIST_ID, "history"));
+    const batch = writeBatch(db);
+    snap.docs.forEach((d) => batch.delete(d.ref));
+    await batch.commit();
+  };
+
+  return {
+    items, loading,
+    addItem, updateItem, toggleCheck, deleteItem, clearChecked,
+    fetchHistory, clearHistory,
+    persistedLearned, persistCategory,
+    customCategories, updateCategories,
+  };
 }

@@ -26,5 +26,10 @@ service cloud.firestore {
       allow read, write: if request.auth != null;
     }
 
+    // Cleared item history — any signed-in user can read/write
+    match /lists/{listId}/history/{histId} {
+      allow read, write: if request.auth != null;
+    }
+
   }
 }
