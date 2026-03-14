@@ -383,7 +383,7 @@ function HistoryPanel({ onClose, onReAdd, fetchHistory, clearHistory }) {
     const map = {};
     const order = [];
     for (const item of historyItems) {
-      const d = item.clearedAt?.toDate?.() || new Date();
+      const d = item.checkedAt?.toDate?.() || new Date();
       const day = new Date(d); day.setHours(0,0,0,0);
       let label;
       if (day >= today)     label = "Today";
@@ -412,7 +412,7 @@ function HistoryPanel({ onClose, onReAdd, fetchHistory, clearHistory }) {
 
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",
           padding:"18px 20px 14px",borderBottom:"1px solid #f0f0f0",flexShrink:0}}>
-          <span style={{fontSize:17,fontWeight:700,color:"#1a1a2e"}}>Recently Cleared</span>
+          <span style={{fontSize:17,fontWeight:700,color:"#1a1a2e"}}>Recently Checked Off</span>
           <button onClick={onClose}
             style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"#aaa"}}>✕</button>
         </div>
@@ -422,7 +422,7 @@ function HistoryPanel({ onClose, onReAdd, fetchHistory, clearHistory }) {
             <div style={{textAlign:"center",padding:40,color:"#aaa",fontSize:14}}>Loading…</div>
           ) : historyItems.length === 0 ? (
             <div style={{textAlign:"center",padding:"50px 24px",color:"#bbb",fontSize:14,lineHeight:1.6}}>
-              No cleared items in the last 30 days.
+              No checked-off items in the last 30 days.
             </div>
           ) : groups?.map(({ label, items: groupItems }) => (
             <div key={label}>

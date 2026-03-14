@@ -70,25 +70,26 @@ export function useGroceryList() {
   };
 
   const toggleCheck = async (id, currentChecked) => {
+    const item = items.find(i => i.id === id);
     await updateDoc(doc(db, "lists", LIST_ID, "items", id), {
       checked: !currentChecked,
       updatedAt: serverTimestamp(),
     });
+    // Archive to history when checking off (not when unchecking)
+    if (!currentChecked && item) {
+      await addDoc(collection(db, "lists", LIST_ID, "history"), {
+        name:        item.name        || "",
+        category:    item.category    || "",
+        note:        item.note        || "",
+        quantity:    item.quantity    || "",
+        packageSize: item.packageSize || "",
+        emoji:       item.emoji       || "",
+        checkedAt:   serverTimestamp(),
+      });
+    }
   };
 
-  // Archive item to history then remove it from the list.
-  // item must be the full item object; user provides clearedBy metadata.
   const deleteItem = async (item, user) => {
-    await addDoc(collection(db, "lists", LIST_ID, "history"), {
-      name:        item.name        || "",
-      category:    item.category    || "",
-      note:        item.note        || "",
-      quantity:    item.quantity    || "",
-      packageSize: item.packageSize || "",
-      emoji:       item.emoji       || "",
-      clearedAt:   serverTimestamp(),
-      clearedBy:   user?.displayName || user?.email || "Someone",
-    });
     await deleteDoc(doc(db, "lists", LIST_ID, "items", item.id));
   };
 
@@ -102,8 +103,8 @@ export function useGroceryList() {
     const cutoff = Timestamp.fromDate(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
     const q = query(
       collection(db, "lists", LIST_ID, "history"),
-      where("clearedAt", ">=", cutoff),
-      orderBy("clearedAt", "desc")
+      where("checkedAt", ">=", cutoff),
+      orderBy("checkedAt", "desc")
     );
     const snap = await getDocs(q);
     return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
