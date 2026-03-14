@@ -373,7 +373,7 @@ function HistoryPanel({ onClose, onReAdd, fetchHistory, clearHistory }) {
 
   useEffect(() => {
     fetchHistory().then(setHistoryItems).catch(() => setHistoryItems([]));
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // eslint-disable-line
 
   const groups = useMemo(() => {
     if (!historyItems) return null;
@@ -528,7 +528,7 @@ export default function GroceryListPage({ user, onLogOut, onNavigate, activePage
       });
     }
     prevItemsRef.current = items;
-  }, [items, loading]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [items, loading]); // eslint-disable-line
 
   const learnedCategories = useMemo(() => ({
     ...persistedLearned,
