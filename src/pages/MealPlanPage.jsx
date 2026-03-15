@@ -383,16 +383,23 @@ function MealOptionsSheet({ meal, weekDates, onMove, onUpdate, onDelete, onClose
 function BottomNav({ activePage, onNavigate }) {
   return (
     <div style={{ display: "flex", background: "#fff", borderTop: "1px solid #e8e8e8",
-      position: "sticky", bottom: 0 }}>
-      {[["Lists", "☰"], ["Recipes", "🍴"], ["Meal Plan", "📅"], ["Settings", "⚙️"]].map(([tab, icon]) => (
-        <button key={tab} onClick={() => onNavigate(tab.toLowerCase())}
-          style={{ flex: 1, padding: "10px 4px 8px", background: "none", border: "none",
-            cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-          <span style={{ fontSize: 20 }}>{icon}</span>
-          <span style={{ fontSize: 10, fontWeight: 600,
-            color: activePage === tab.toLowerCase() ? "#1aaae0" : "#aaa" }}>{tab}</span>
-        </button>
-      ))}
+      position: "sticky", bottom: 0, padding: "6px 8px 8px" }}>
+      {[["Lists", "☰"], ["Recipes", "🍴"], ["Meal Plan", "📅"], ["Settings", "⚙️"]].map(([tab, icon]) => {
+        const isActive = activePage === tab.toLowerCase();
+        return (
+          <button key={tab} onClick={() => onNavigate(tab.toLowerCase())}
+            style={{ flex: 1, background: "none", border: "none", cursor: "pointer",
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
+              padding: 0, opacity: isActive ? 1 : 0.35 }}>
+            <div style={{ background: isActive ? "#e8f6fd" : "transparent",
+              borderRadius: 12, padding: "5px 18px", transition: "background 0.15s" }}>
+              <span style={{ fontSize: 20, display: "block" }}>{icon}</span>
+            </div>
+            <span style={{ fontSize: 10, fontWeight: 700,
+              color: isActive ? "#1aaae0" : "#888" }}>{tab}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
