@@ -7,17 +7,17 @@ import {
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 
-const LIST_ID = "shared-family-list";
-
-export function useGroceryList() {
+export function useGroceryList(listId) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [persistedLearned, setPersistedLearned] = useState({});
   const [customCategories, setCustomCategories] = useState(null);
 
   useEffect(() => {
+    if (!listId) return;
+    setLoading(true);
     const q = query(
-      collection(db, "lists", LIST_ID, "items"),
+      collection(db, "lists", listId, "items"),
       orderBy("category"),
       orderBy("createdAt")
     );
@@ -28,28 +28,28 @@ export function useGroceryList() {
       setLoading(false);
     });
 
-    const unsubList = onSnapshot(doc(db, "lists", LIST_ID), (snap) => {
+    const unsubList = onSnapshot(doc(db, "lists", listId), (snap) => {
       setPersistedLearned(snap.data()?.learnedCategories || {});
       setCustomCategories(snap.data()?.categories || null);
     });
 
     return () => { unsubItems(); unsubList(); };
-  }, []);
+  }, [listId]);
 
   const updateCategories = async (cats) => {
-    await setDoc(doc(db, "lists", LIST_ID), { categories: cats }, { merge: true });
+    await setDoc(doc(db, "lists", listId), { categories: cats }, { merge: true });
   };
 
   const persistCategory = async (name, category) => {
     await setDoc(
-      doc(db, "lists", LIST_ID),
+      doc(db, "lists", listId),
       { learnedCategories: { [name.toLowerCase()]: category } },
       { merge: true }
     );
   };
 
   const addItem = async (item, user) => {
-    await addDoc(collection(db, "lists", LIST_ID, "items"), {
+    await addDoc(collection(db, "lists", listId, "items"), {
       name: item.name,
       category: item.category,
       note: item.note || "",
@@ -63,7 +63,7 @@ export function useGroceryList() {
   };
 
   const updateItem = async (id, changes) => {
-    await updateDoc(doc(db, "lists", LIST_ID, "items", id), {
+    await updateDoc(doc(db, "lists", listId, "items", id), {
       ...changes,
       updatedAt: serverTimestamp(),
     });
@@ -71,13 +71,13 @@ export function useGroceryList() {
 
   const toggleCheck = async (id, currentChecked) => {
     const item = items.find(i => i.id === id);
-    await updateDoc(doc(db, "lists", LIST_ID, "items", id), {
+    await updateDoc(doc(db, "lists", listId, "items", id), {
       checked: !currentChecked,
       updatedAt: serverTimestamp(),
     });
     // Archive to history when checking off (not when unchecking)
     if (!currentChecked && item) {
-      await addDoc(collection(db, "lists", LIST_ID, "history"), {
+      await addDoc(collection(db, "lists", listId, "history"), {
         name:        item.name        || "",
         category:    item.category    || "",
         note:        item.note        || "",
@@ -90,7 +90,7 @@ export function useGroceryList() {
   };
 
   const deleteItem = async (item, user) => {
-    await deleteDoc(doc(db, "lists", LIST_ID, "items", item.id));
+    await deleteDoc(doc(db, "lists", listId, "items", item.id));
   };
 
   const clearChecked = async (user) => {
@@ -102,7 +102,7 @@ export function useGroceryList() {
   const fetchHistory = async () => {
     const cutoff = Timestamp.fromDate(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
     const q = query(
-      collection(db, "lists", LIST_ID, "history"),
+      collection(db, "lists", listId, "history"),
       where("checkedAt", ">=", cutoff),
       orderBy("checkedAt", "desc")
     );
@@ -112,7 +112,7 @@ export function useGroceryList() {
 
   // Batch-delete every document in the history subcollection.
   const clearHistory = async () => {
-    const snap = await getDocs(collection(db, "lists", LIST_ID, "history"));
+    const snap = await getDocs(collection(db, "lists", listId, "history"));
     const batch = writeBatch(db);
     snap.docs.forEach((d) => batch.delete(d.ref));
     await batch.commit();
