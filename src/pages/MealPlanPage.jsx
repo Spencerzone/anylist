@@ -259,8 +259,10 @@ function AddMealPanel({ dateStr, recipes, onAdd, onClose }) {
 
 // ── Meal options sheet ─────────────────────────────────────
 
-function MealOptionsSheet({ meal, weekDates, onMove, onDelete, onClose }) {
+function MealOptionsSheet({ meal, weekDates, onMove, onUpdate, onDelete, onClose }) {
   const [movingTo, setMovingTo] = useState(false);
+  const [editing, setEditing]   = useState(false);
+  const [draft, setDraft]       = useState(meal.description || "");
 
   return (
     <>
@@ -287,8 +289,42 @@ function MealOptionsSheet({ meal, weekDates, onMove, onDelete, onClose }) {
           </div>
         </div>
 
-        {!movingTo ? (
+        {editing ? (
           <>
+            <textarea autoFocus value={draft} onChange={e => setDraft(e.target.value)}
+              rows={3}
+              style={{ width: "100%", padding: "10px 14px", fontSize: 15,
+                border: "1.5px solid #1aaae0", borderRadius: 10, outline: "none",
+                fontFamily: "inherit", boxSizing: "border-box", resize: "none",
+                lineHeight: 1.5, marginBottom: 10 }} />
+            <button onClick={() => {
+                if (draft.trim()) { onUpdate(meal.id, { description: draft.trim() }); onClose(); }
+              }}
+              disabled={!draft.trim()}
+              style={{ width: "100%", padding: "13px", marginBottom: 10,
+                background: draft.trim() ? "#1aaae0" : "#c8e8f5", color: "#fff",
+                border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14,
+                cursor: draft.trim() ? "pointer" : "default", fontFamily: "inherit" }}>
+              Save
+            </button>
+            <button onClick={() => setEditing(false)}
+              style={{ width: "100%", padding: "10px", background: "none",
+                border: "1.5px solid #e8e8e8", color: "#888", borderRadius: 10,
+                fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>
+              Cancel
+            </button>
+          </>
+        ) : !movingTo ? (
+          <>
+            {meal.type === "text" && (
+              <button onClick={() => setEditing(true)}
+                style={{ width: "100%", padding: "13px", marginBottom: 10,
+                  background: "#f0f9fe", color: "#1aaae0", border: "none",
+                  borderRadius: 10, fontWeight: 700, fontSize: 14,
+                  cursor: "pointer", fontFamily: "inherit" }}>
+                Edit
+              </button>
+            )}
             <button onClick={() => setMovingTo(true)}
               style={{ width: "100%", padding: "13px", marginBottom: 10,
                 background: "#f0f9fe", color: "#1aaae0", border: "none",
@@ -372,7 +408,7 @@ export default function MealPlanPage({ user, onNavigate, activePage }) {
   const startDate = toDateStr(weekDates[0]);
   const endDate   = toDateStr(weekDates[6]);
 
-  const { meals, addMeal, moveMeal, deleteMeal } = useMealPlan(startDate, endDate);
+  const { meals, addMeal, moveMeal, updateMeal, deleteMeal } = useMealPlan(startDate, endDate);
   const { recipes } = useRecipes();
 
   const handleAdd = async (dateStr, mealData) => {
@@ -449,6 +485,7 @@ export default function MealPlanPage({ user, onNavigate, activePage }) {
           meal={mealOptions}
           weekDates={weekDates}
           onMove={moveMeal}
+          onUpdate={updateMeal}
           onDelete={deleteMeal}
           onClose={() => setMealOptions(null)}
         />

@@ -42,9 +42,13 @@ export function useMealPlan(startDate, endDate) {
     await updateDoc(doc(db, "mealplan", id), { date: newDate, order });
   };
 
+  const updateMeal = async (id, changes) => {
+    await updateDoc(doc(db, "mealplan", id), changes);
+  };
+
   const deleteMeal = async (id) => {
     await deleteDoc(doc(db, "mealplan", id));
   };
 
-  return { meals, loading, addMeal, moveMeal, deleteMeal };
+  return { meals, loading, addMeal, moveMeal, updateMeal, deleteMeal };
 }
