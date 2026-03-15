@@ -842,7 +842,7 @@ export default function RecipesPage({ user, onNavigate, activePage }) {
     : "Recipes";
 
   return (
-    <div style={{ maxWidth: 480, margin: "0 auto", minHeight: "100vh", background: "#f0f2f5",
+    <div style={{ width: "100%", margin: "0 auto", minHeight: "100vh", background: "#f0f2f5",
       fontFamily: "'Helvetica Neue',Arial,sans-serif", display: "flex", flexDirection: "column",
       boxShadow: "0 0 40px rgba(0,0,0,0.08)" }}>
 
