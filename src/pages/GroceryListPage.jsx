@@ -655,11 +655,13 @@ export default function GroceryListPage({ user, onLogOut, onNavigate, activePage
     if (addedByOther.length && Notification.permission === "granted") {
       const by    = addedByOther[0].addedBy;
       const names = addedByOther.map(i => i.name).join(", ");
-      new Notification("FoodList", {
-        body: `${by} added: ${names}`,
-        icon: "/icon-192.png",
-        tag:  "foodlist-add",
-      });
+      const payload = { body: `${by} added: ${names}`, icon: "/anylist/icon-192.png", tag: "foodlist-add" };
+      try {
+        // Chrome on Android forbids new Notification() — must use ServiceWorker
+        navigator.serviceWorker?.ready
+          .then(reg => reg.showNotification("FoodList", payload))
+          .catch(() => {});
+      } catch (e) { /* notifications not supported */ }
     }
     prevItemsRef.current = items;
   }, [items, loading]); // eslint-disable-line
