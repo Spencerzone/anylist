@@ -1,5 +1,5 @@
 // src/hooks/useGroceryList.js
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   collection, onSnapshot, addDoc, updateDoc,
   deleteDoc, doc, setDoc, serverTimestamp, query, orderBy,
@@ -12,10 +12,17 @@ export function useGroceryList(listId) {
   const [loading, setLoading] = useState(true);
   const [persistedLearned, setPersistedLearned] = useState({});
   const [customCategories, setCustomCategories] = useState(null);
+  // Cache items per listId so switching back to a known list never shows blank
+  const itemsCacheRef = useRef({});
 
   useEffect(() => {
     if (!listId) return;
-    setLoading(true);
+
+    // Immediately restore from cache if available (prevents blank on re-visit)
+    const cached = itemsCacheRef.current[listId];
+    setItems(cached || []);
+    setLoading(!cached);
+
     const q = query(
       collection(db, "lists", listId, "items"),
       orderBy("category"),
@@ -24,6 +31,7 @@ export function useGroceryList(listId) {
 
     const unsubItems = onSnapshot(q, (snap) => {
       const data = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      itemsCacheRef.current[listId] = data;
       setItems(data);
       setLoading(false);
     });
