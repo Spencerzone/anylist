@@ -1,7 +1,129 @@
 // src/pages/GroceryListPage.jsx
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useGroceryList } from "../hooks/useGroceryList";
+import { useLists } from "../hooks/useLists";
 import { DEFAULT_CATEGORIES, CAT_ICONS, guessCategory } from "../lib/categories";
+
+// ── List Tab Bar ───────────────────────────────────────────
+const LIST_EMOJIS = ["📋","🛒","🔨","💊","🏡","👕","📦","🐾","🌱","🧹","🐶","🎉"];
+
+function AddListModal({ onAdd, onClose }) {
+  const [name, setName] = useState("");
+  const [emoji, setEmoji] = useState("📋");
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:1200,
+      display:"flex",alignItems:"flex-end",justifyContent:"center"}}
+      onClick={onClose}>
+      <div style={{background:"#fff",width:"100%",maxWidth:480,borderRadius:"20px 20px 0 0",
+        padding:"24px 20px 36px",boxShadow:"0 -4px 40px rgba(0,0,0,0.18)"}}
+        onClick={e => e.stopPropagation()}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
+          <span style={{fontSize:17,fontWeight:700,color:"#1a1a2e"}}>New List</span>
+          <button onClick={onClose} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"#aaa"}}>✕</button>
+        </div>
+        <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:16}}>
+          {LIST_EMOJIS.map(e => (
+            <button key={e} onClick={() => setEmoji(e)}
+              style={{fontSize:22,padding:"6px 10px",borderRadius:10,cursor:"pointer",
+                border: emoji===e ? "2.5px solid #1aaae0" : "2px solid #e8e8e8",
+                background: emoji===e ? "#e8f7fd" : "#fff"}}>
+              {e}
+            </button>
+          ))}
+        </div>
+        <input autoFocus value={name} onChange={e => setName(e.target.value)}
+          placeholder="List name (e.g. Bunnings, Pharmacy…)"
+          onKeyDown={e => { if (e.key==="Enter" && name.trim()) { onAdd(name.trim(), emoji); onClose(); }}}
+          style={{width:"100%",fontSize:16,padding:"12px 14px",borderRadius:10,boxSizing:"border-box",
+            border:"1.5px solid #ddd",outline:"none",fontFamily:"inherit",marginBottom:14}} />
+        <button onClick={() => { if(name.trim()) { onAdd(name.trim(), emoji); onClose(); }}}
+          disabled={!name.trim()}
+          style={{width:"100%",padding:"13px",background: name.trim() ? "#1aaae0" : "#ccc",
+            color:"#fff",border:"none",borderRadius:12,fontWeight:700,fontSize:15,
+            cursor: name.trim() ? "pointer" : "default",fontFamily:"inherit"}}>
+          Create List
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function EditListModal({ list, onSave, onDelete, canDelete, onClose }) {
+  const [name, setName] = useState(list.name);
+  const [emoji, setEmoji] = useState(list.emoji || "📋");
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:1200,
+      display:"flex",alignItems:"flex-end",justifyContent:"center"}}
+      onClick={onClose}>
+      <div style={{background:"#fff",width:"100%",maxWidth:480,borderRadius:"20px 20px 0 0",
+        padding:"24px 20px 36px",boxShadow:"0 -4px 40px rgba(0,0,0,0.18)"}}
+        onClick={e => e.stopPropagation()}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
+          <span style={{fontSize:17,fontWeight:700,color:"#1a1a2e"}}>Edit List</span>
+          <button onClick={onClose} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"#aaa"}}>✕</button>
+        </div>
+        <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:16}}>
+          {LIST_EMOJIS.map(e => (
+            <button key={e} onClick={() => setEmoji(e)}
+              style={{fontSize:22,padding:"6px 10px",borderRadius:10,cursor:"pointer",
+                border: emoji===e ? "2.5px solid #1aaae0" : "2px solid #e8e8e8",
+                background: emoji===e ? "#e8f7fd" : "#fff"}}>
+              {e}
+            </button>
+          ))}
+        </div>
+        <input autoFocus value={name} onChange={e => setName(e.target.value)}
+          onKeyDown={e => { if (e.key==="Enter" && name.trim()) { onSave(name.trim(), emoji); onClose(); }}}
+          style={{width:"100%",fontSize:16,padding:"12px 14px",borderRadius:10,boxSizing:"border-box",
+            border:"1.5px solid #ddd",outline:"none",fontFamily:"inherit",marginBottom:14}} />
+        <button onClick={() => { if(name.trim()) { onSave(name.trim(), emoji); onClose(); }}}
+          disabled={!name.trim()}
+          style={{width:"100%",padding:"13px",background: name.trim() ? "#1aaae0" : "#ccc",
+            color:"#fff",border:"none",borderRadius:12,fontWeight:700,fontSize:15,
+            cursor: name.trim() ? "pointer" : "default",fontFamily:"inherit",marginBottom:10}}>
+          Save
+        </button>
+        {canDelete && (
+          <button onClick={() => { if(window.confirm(`Delete "${list.name}"? Items on this list will be removed.`)) { onDelete(); onClose(); }}}
+            style={{width:"100%",padding:"13px",background:"#fff5f5",color:"#e53935",
+              border:"none",borderRadius:12,fontWeight:700,fontSize:15,cursor:"pointer",fontFamily:"inherit"}}>
+            Delete List
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ListTabBar({ lists, activeId, onSelect, onCreate, onEdit }) {
+  return (
+    <div style={{display:"flex",alignItems:"center",gap:6,overflowX:"auto",
+      padding:"0 12px 12px",scrollbarWidth:"none",WebkitOverflowScrolling:"touch"}}>
+      {lists.map(list => {
+        const active = list.id === activeId;
+        return (
+          <button key={list.id}
+            onClick={() => active ? onEdit(list) : onSelect(list.id)}
+            style={{flexShrink:0,display:"flex",alignItems:"center",gap:5,
+              padding:"6px 13px",borderRadius:20,fontWeight: active ? 700 : 500,
+              fontSize:13,cursor:"pointer",fontFamily:"inherit",transition:"all 0.15s",
+              background: active ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.1)",
+              color:"#fff",border: active ? "1.5px solid rgba(255,255,255,0.7)" : "1.5px solid rgba(255,255,255,0.25)"}}>
+            <span>{list.emoji || "📋"}</span>
+            <span>{list.name}</span>
+            {active && <span style={{fontSize:11,opacity:0.75,marginLeft:1}}>▾</span>}
+          </button>
+        );
+      })}
+      <button onClick={onCreate}
+        style={{flexShrink:0,padding:"6px 12px",borderRadius:20,fontSize:13,cursor:"pointer",
+          fontFamily:"inherit",fontWeight:600,background:"rgba(255,255,255,0.08)",
+          color:"rgba(255,255,255,0.8)",border:"1.5px dashed rgba(255,255,255,0.4)"}}>
+        + New list
+      </button>
+    </div>
+  );
+}
 
 // ── Manage Categories Modal ────────────────────────────────
 function ManageCategoriesModal({ categories, items, onSave, onClose }) {
@@ -474,9 +596,21 @@ function HistoryPanel({ onClose, onReAdd, fetchHistory, clearHistory }) {
 
 // ── Main Page ─────────────────────────────────────────────
 export default function GroceryListPage({ user, onLogOut, onNavigate, activePage = "lists" }) {
+  const { lists, createList, renameList, deleteList } = useLists();
+  const [activeListId, setActiveListId] = useState(null);
+  const [showAddList, setShowAddList] = useState(false);
+  const [editingList, setEditingList] = useState(null);
+
+  // Default to first list once loaded
+  useEffect(() => {
+    if (!activeListId && lists.length > 0) setActiveListId(lists[0].id);
+  }, [lists, activeListId]);
+
+  const activeList = lists.find(l => l.id === activeListId) || null;
+
   const { items, loading, addItem, updateItem, toggleCheck, deleteItem, clearChecked,
           fetchHistory, clearHistory, persistedLearned, persistCategory,
-          customCategories, updateCategories } = useGroceryList();
+          customCategories, updateCategories } = useGroceryList(activeListId);
   const [editingItem, setEditingItem] = useState(null);
   const [showChecked, setShowChecked] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -564,8 +698,8 @@ export default function GroceryListPage({ user, onLogOut, onNavigate, activePage
 
       {/* Header */}
       <div style={{background:"linear-gradient(135deg,#1aaae0 0%,#0e8ab8 100%)",
-        padding:"16px 16px 14px",color:"#fff"}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        padding:"16px 16px 0",color:"#fff"}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",paddingBottom:12}}>
           <div style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer"}}
             onClick={() => setShowUserMenu(u => !u)}>
             {user.photoURL
@@ -576,7 +710,9 @@ export default function GroceryListPage({ user, onLogOut, onNavigate, activePage
                 </div>
             }
             <div>
-              <div style={{fontSize:17,fontWeight:700,letterSpacing:0.2}}>Shared Grocery List</div>
+              <div style={{fontSize:17,fontWeight:700,letterSpacing:0.2}}>
+                {activeList ? `${activeList.emoji} ${activeList.name}` : "Loading…"}
+              </div>
               <div style={{fontSize:12,opacity:0.85,marginTop:1}}>
                 {loading ? "Loading..." : `${remaining} of ${items.length} items remaining`}
               </div>
@@ -609,6 +745,15 @@ export default function GroceryListPage({ user, onLogOut, onNavigate, activePage
                 Clear {checkedCount} checked item{checkedCount !== 1 ? "s" : ""}
               </button>
             )}
+            {activeList && (
+              <button onClick={() => { setEditingList(activeList); setShowDotMenu(false); }}
+                style={{width:"100%",background:"none",border:"none",color:"#fff",fontSize:14,
+                  fontWeight:600,cursor:"pointer",padding:"10px 14px",textAlign:"left",borderRadius:8,
+                  display:"flex",alignItems:"center",gap:10}}>
+                <span style={{fontSize:18}}>✏️</span>
+                Rename / manage list
+              </button>
+            )}
           </div>
         )}
 
@@ -627,6 +772,17 @@ export default function GroceryListPage({ user, onLogOut, onNavigate, activePage
               Sign Out
             </button>
           </div>
+        )}
+
+        {/* List tab bar */}
+        {lists.length > 0 && (
+          <ListTabBar
+            lists={lists}
+            activeId={activeListId}
+            onSelect={id => { setActiveListId(id); setShowDotMenu(false); setShowUserMenu(false); }}
+            onCreate={() => setShowAddList(true)}
+            onEdit={list => setEditingList(list)}
+          />
         )}
       </div>
 
@@ -720,6 +876,29 @@ export default function GroceryListPage({ user, onLogOut, onNavigate, activePage
             UNDO
           </button>
         </div>
+      )}
+
+      {/* Add / Edit list modals */}
+      {showAddList && (
+        <AddListModal
+          onAdd={(name, emoji) => createList(name, emoji)}
+          onClose={() => setShowAddList(false)}
+        />
+      )}
+      {editingList && (
+        <EditListModal
+          list={editingList}
+          canDelete={lists.length > 1}
+          onSave={(name, emoji) => renameList(editingList.id, name, emoji)}
+          onDelete={() => {
+            const remaining = lists.filter(l => l.id !== editingList.id);
+            deleteList(editingList.id);
+            if (activeListId === editingList.id && remaining.length > 0) {
+              setActiveListId(remaining[0].id);
+            }
+          }}
+          onClose={() => setEditingList(null)}
+        />
       )}
 
       {/* Bottom Nav */}
