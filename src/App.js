@@ -1,6 +1,7 @@
 // src/App.js
-import { useState, Component } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "./hooks/useAuth";
+import { useLists } from "./hooks/useLists";
 import LoginPage from "./pages/LoginPage";
 import GroceryListPage from "./pages/GroceryListPage";
 import RecipesPage from "./pages/RecipesPage";
@@ -39,6 +40,12 @@ class ErrorBoundary extends Component {
 export default function App() {
   const { user, signIn, logOut } = useAuth();
   const [page, setPage] = useState("lists");
+  const { lists } = useLists();
+  const [activeListId, setActiveListId] = useState(null);
+
+  useEffect(() => {
+    if (!activeListId && lists.length > 0) setActiveListId(lists[0].id);
+  }, [lists, activeListId]);
 
   if (user === undefined) {
     return (
@@ -54,7 +61,7 @@ export default function App() {
   if (!user) return <LoginPage onSignIn={signIn} />;
 
   if (page === "recipes") {
-    return <RecipesPage user={user} onNavigate={setPage} activePage={page} />;
+    return <RecipesPage user={user} onNavigate={setPage} activePage={page} activeListId={activeListId} />;
   }
 
   if (page === "meal plan") {
@@ -63,7 +70,8 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <GroceryListPage user={user} onLogOut={logOut} onNavigate={setPage} activePage={page} />
+      <GroceryListPage user={user} onLogOut={logOut} onNavigate={setPage} activePage={page}
+        activeListId={activeListId} onListChange={setActiveListId} />
     </ErrorBoundary>
   );
 }
