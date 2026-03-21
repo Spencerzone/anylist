@@ -595,16 +595,12 @@ function HistoryPanel({ onClose, onReAdd, fetchHistory, clearHistory }) {
 }
 
 // ── Main Page ─────────────────────────────────────────────
-export default function GroceryListPage({ user, onLogOut, onNavigate, activePage = "lists" }) {
+export default function GroceryListPage({ user, onLogOut, onNavigate, activePage = "lists",
+    activeListId, onListChange }) {
   const { lists, createList, renameList, deleteList } = useLists();
-  const [activeListId, setActiveListId] = useState(null);
+  const setActiveListId = onListChange;
   const [showAddList, setShowAddList] = useState(false);
   const [editingList, setEditingList] = useState(null);
-
-  // Default to first list once loaded
-  useEffect(() => {
-    if (!activeListId && lists.length > 0) setActiveListId(lists[0].id);
-  }, [lists, activeListId]);
 
   const activeList = lists.find(l => l.id === activeListId) || null;
 

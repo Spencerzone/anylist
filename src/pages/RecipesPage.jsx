@@ -785,9 +785,9 @@ function BottomNav({ activePage, onNavigate }) {
 
 // ── Main Page ──────────────────────────────────────────────
 
-export default function RecipesPage({ user, onNavigate, activePage }) {
+export default function RecipesPage({ user, onNavigate, activePage, activeListId }) {
   const { recipes, loading, addRecipe, updateRecipe, deleteRecipe } = useRecipes();
-  const { addItem, persistedLearned } = useGroceryList();
+  const { addItem, persistedLearned } = useGroceryList(activeListId);
 
   const [view, setView] = useState("list"); // "list" | "detail" | "form" | "pantry"
   const [selected, setSelected] = useState(null);
