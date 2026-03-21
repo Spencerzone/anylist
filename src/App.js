@@ -1,5 +1,5 @@
 // src/App.js
-import { useState, useEffect } from "react";
+import { useState, useEffect, Component } from "react";
 import { useAuth } from "./hooks/useAuth";
 import { useLists } from "./hooks/useLists";
 import LoginPage from "./pages/LoginPage";
