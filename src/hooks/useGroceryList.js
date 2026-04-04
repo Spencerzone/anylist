@@ -12,6 +12,7 @@ export function useGroceryList(listId) {
   const [loading, setLoading] = useState(true);
   const [persistedLearned, setPersistedLearned] = useState({});
   const [customCategories, setCustomCategories] = useState(null);
+  const [customCategoryIcons, setCustomCategoryIcons] = useState({});
   // Cache items per listId so switching back to a known list never shows blank
   const itemsCacheRef = useRef({});
 
@@ -39,6 +40,7 @@ export function useGroceryList(listId) {
     const unsubList = onSnapshot(doc(db, "lists", listId), (snap) => {
       setPersistedLearned(snap.data()?.learnedCategories || {});
       setCustomCategories(snap.data()?.categories || null);
+      setCustomCategoryIcons(snap.data()?.categoryIcons || {});
     });
 
     return () => { unsubItems(); unsubList(); };
@@ -46,6 +48,10 @@ export function useGroceryList(listId) {
 
   const updateCategories = async (cats) => {
     await setDoc(doc(db, "lists", listId), { categories: cats }, { merge: true });
+  };
+
+  const updateCategoryIcons = async (icons) => {
+    await setDoc(doc(db, "lists", listId), { categoryIcons: icons }, { merge: true });
   };
 
   const persistCategory = async (name, category) => {
@@ -132,5 +138,6 @@ export function useGroceryList(listId) {
     fetchHistory, clearHistory,
     persistedLearned, persistCategory,
     customCategories, updateCategories,
+    customCategoryIcons, updateCategoryIcons,
   };
 }

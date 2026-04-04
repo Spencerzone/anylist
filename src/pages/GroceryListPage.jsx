@@ -125,27 +125,62 @@ function ListTabBar({ lists, activeId, onSelect, onCreate, onEdit }) {
   );
 }
 
+// ── Emoji picker options ──────────────────────────────────
+const ICON_PICKER_EMOJIS = [
+  "🥦","🥕","🍎","🍋","🥑","🌽","🍅","🧅","🧄","🫑",
+  "🍞","🥐","🥖","🥨","🧁","🎂","🍰","🥯","🫓",
+  "🧀","🥛","🥚","🧈","🍦","🍧",
+  "🥩","🍗","🌭","🥓","🍖",
+  "🐟","🦐","🦑","🦞","🦀","🍣",
+  "🥫","🫙","🧂","🍯","🥜","🌰",
+  "🍿","🍫","🍬","🍭","🍪","🧇","🥞","🧆",
+  "🥤","☕","🫖","🍷","🍺","🧃","🧊",
+  "🧴","🧼","🪥","💊","💉","🩺",
+  "🧹","🧺","🪣","🧻","🪴",
+  "🐾","🐕","🐈",
+  "🍼","👶",
+  "🏠","🔧","🪚","🛠️",
+  "📦","🏷️","🛒","🎁","⭐","❄️",
+];
+
 // ── Manage Categories Modal ────────────────────────────────
-function ManageCategoriesModal({ categories, items, onSave, onClose }) {
-  const [cats, setCats] = useState([...categories]);
+function ManageCategoriesModal({ categories, items, onSave, onClose, categoryIcons = {}, onSaveIcons }) {
+  const [cats, setCats] = useState(() => [...categories].sort((a, b) => a.localeCompare(b)));
   const [newName, setNewName] = useState("");
   const [renamingIdx, setRenamingIdx] = useState(null);
   const [renameVal, setRenameVal] = useState("");
+  const [icons, setIcons] = useState({ ...categoryIcons });
+  const [pickingIconIdx, setPickingIconIdx] = useState(null);
 
   const inUse = cat => items.some(i => i.category === cat);
 
   const commitRename = () => {
     const val = renameVal.trim();
     if (val && val !== cats[renamingIdx] && !cats.includes(val)) {
-      setCats(c => c.map((x, i) => i === renamingIdx ? val : x));
+      const oldName = cats[renamingIdx];
+      // Carry over icon if one was set for old name
+      if (icons[oldName]) {
+        setIcons(prev => { const n = {...prev}; n[val] = n[oldName]; delete n[oldName]; return n; });
+      }
+      setCats(c => [...c.map((x, i) => i === renamingIdx ? val : x)].sort((a, b) => a.localeCompare(b)));
     }
     setRenamingIdx(null);
   };
 
+  const addCategory = () => {
+    const v = newName.trim();
+    if (v && !cats.includes(v)) {
+      setCats(c => [...c, v].sort((a, b) => a.localeCompare(b)));
+      setNewName("");
+    }
+  };
+
+  const effectiveIcon = (cat) => icons[cat] || CAT_ICONS[cat] || "🏷️";
+
   return (
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:1100,
       display:"flex",alignItems:"flex-end",justifyContent:"center"}}
-      onClick={onClose}>
+      onClick={() => { setPickingIconIdx(null); onClose(); }}>
       <div style={{background:"#fff",width:"100%",maxWidth:480,borderRadius:"20px 20px 0 0",
         padding:"20px 0 36px",boxShadow:"0 -4px 40px rgba(0,0,0,0.18)",
         display:"flex",flexDirection:"column",maxHeight:"82vh"}}
@@ -157,32 +192,66 @@ function ManageCategoriesModal({ categories, items, onSave, onClose }) {
           <button onClick={onClose} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"#aaa"}}>✕</button>
         </div>
 
-        <div style={{overflowY:"auto",flex:1}}>
+        <div style={{overflowY:"auto",flex:1}} onClick={() => setPickingIconIdx(null)}>
           {cats.map((cat, i) => {
             const used = inUse(cat);
             return (
-              <div key={i} style={{display:"flex",alignItems:"center",gap:10,
-                padding:"9px 20px",borderBottom:"1px solid #f8f8f8"}}>
-                <span style={{fontSize:19,width:28,textAlign:"center",flexShrink:0}}>
-                  {CAT_ICONS[cat] || "🏷️"}
-                </span>
-                {renamingIdx === i
-                  ? <input autoFocus value={renameVal}
-                      onChange={e => setRenameVal(e.target.value)}
-                      onBlur={commitRename}
-                      onKeyDown={e => { if (e.key === "Enter") commitRename(); if (e.key === "Escape") setRenamingIdx(null); }}
-                      style={{flex:1,fontSize:15,border:"1.5px solid #1aaae0",borderRadius:8,
-                        padding:"5px 10px",outline:"none",fontFamily:"inherit"}} />
-                  : <span style={{flex:1,fontSize:15,color:"#333"}}>{cat}</span>
-                }
-                <button onClick={() => !used && (setRenamingIdx(i), setRenameVal(cat))}
-                  title={used ? "In use — move items first" : "Rename"}
-                  style={{background:"none",border:"none",fontSize:15,padding:4,
-                    cursor:used?"default":"pointer",opacity:used?0.25:0.65}}>✏️</button>
-                <button onClick={() => !used && setCats(c => c.filter((_,j) => j !== i))}
-                  title={used ? "In use — move items first" : "Delete"}
-                  style={{background:"none",border:"none",fontSize:15,padding:4,
-                    cursor:used?"default":"pointer",opacity:used?0.2:0.65}}>🗑️</button>
+              <div key={cat}>
+                <div style={{display:"flex",alignItems:"center",gap:10,
+                  padding:"9px 20px",borderBottom:"1px solid #f8f8f8"}}>
+                  <button
+                    onClick={e => { e.stopPropagation(); setPickingIconIdx(pickingIconIdx === i ? null : i); setRenamingIdx(null); }}
+                    title="Change icon"
+                    style={{fontSize:19,width:32,height:32,display:"flex",alignItems:"center",
+                      justifyContent:"center",flexShrink:0,background:"#f4f6f8",border:"1.5px solid #e8e8e8",
+                      borderRadius:8,cursor:"pointer",padding:0}}>
+                    {effectiveIcon(cat)}
+                  </button>
+                  {renamingIdx === i
+                    ? <input autoFocus value={renameVal}
+                        onChange={e => setRenameVal(e.target.value)}
+                        onBlur={commitRename}
+                        onKeyDown={e => { if (e.key === "Enter") commitRename(); if (e.key === "Escape") setRenamingIdx(null); }}
+                        style={{flex:1,fontSize:15,border:"1.5px solid #1aaae0",borderRadius:8,
+                          padding:"5px 10px",outline:"none",fontFamily:"inherit"}} />
+                    : <span style={{flex:1,fontSize:15,color:"#333"}}>{cat}</span>
+                  }
+                  <button onClick={() => !used && (setPickingIconIdx(null), setRenamingIdx(i), setRenameVal(cat))}
+                    title={used ? "In use — move items first" : "Rename"}
+                    style={{background:"none",border:"none",fontSize:15,padding:4,
+                      cursor:used?"default":"pointer",opacity:used?0.25:0.65}}>✏️</button>
+                  <button onClick={() => !used && setCats(c => c.filter((_,j) => j !== i))}
+                    title={used ? "In use — move items first" : "Delete"}
+                    style={{background:"none",border:"none",fontSize:15,padding:4,
+                      cursor:used?"default":"pointer",opacity:used?0.2:0.65}}>🗑️</button>
+                </div>
+                {pickingIconIdx === i && (
+                  <div style={{padding:"10px 20px 14px",background:"#f8f9fb",borderBottom:"1px solid #ececec"}}
+                    onClick={e => e.stopPropagation()}>
+                    <div style={{fontSize:11,fontWeight:700,color:"#aaa",textTransform:"uppercase",
+                      letterSpacing:0.8,marginBottom:8}}>Choose icon</div>
+                    <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                      {ICON_PICKER_EMOJIS.map(emoji => (
+                        <button key={emoji} onClick={() => { setIcons(prev => ({...prev, [cat]: emoji})); setPickingIconIdx(null); }}
+                          style={{fontSize:20,width:36,height:36,display:"flex",alignItems:"center",
+                            justifyContent:"center",border: icons[cat] === emoji || (!icons[cat] && CAT_ICONS[cat] === emoji)
+                              ? "2px solid #1aaae0" : "1.5px solid #e8e8e8",
+                            borderRadius:8,background:"#fff",cursor:"pointer",padding:0}}>
+                          {emoji}
+                        </button>
+                      ))}
+                      {(icons[cat] || CAT_ICONS[cat]) && (
+                        <button onClick={() => { setIcons(prev => { const n={...prev}; delete n[cat]; return n; }); setPickingIconIdx(null); }}
+                          title="Reset to default"
+                          style={{fontSize:11,fontWeight:700,color:"#888",padding:"0 10px",height:36,
+                            border:"1.5px solid #e8e8e8",borderRadius:8,background:"#fff",cursor:"pointer",
+                            whiteSpace:"nowrap"}}>
+                          Reset
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -190,15 +259,12 @@ function ManageCategoriesModal({ categories, items, onSave, onClose }) {
 
         <div style={{padding:"12px 20px 0",borderTop:"1px solid #f0f0f0",display:"flex",gap:8}}>
           <input value={newName} onChange={e => setNewName(e.target.value)}
-            onKeyDown={e => {
-              const v = newName.trim();
-              if (e.key === "Enter" && v && !cats.includes(v)) { setCats(c => [...c, v]); setNewName(""); }
-            }}
+            onKeyDown={e => { if (e.key === "Enter") addCategory(); }}
             placeholder="New category name..."
             style={{flex:1,padding:"10px 14px",fontSize:14,border:"1.5px solid #e8e8e8",
               borderRadius:10,outline:"none",fontFamily:"inherit",boxSizing:"border-box"}} />
           <button
-            onClick={() => { const v = newName.trim(); if (v && !cats.includes(v)) { setCats(c => [...c, v]); setNewName(""); } }}
+            onClick={addCategory}
             disabled={!newName.trim() || cats.includes(newName.trim())}
             style={{padding:"10px 18px",background:"#1aaae0",color:"#fff",border:"none",
               borderRadius:10,fontWeight:700,fontSize:14,cursor:"pointer",
@@ -208,7 +274,7 @@ function ManageCategoriesModal({ categories, items, onSave, onClose }) {
         </div>
 
         <div style={{padding:"12px 20px 0"}}>
-          <button onClick={() => onSave(cats)}
+          <button onClick={() => { onSaveIcons && onSaveIcons(icons); onSave(cats); }}
             style={{width:"100%",padding:"13px",background:"#1aaae0",color:"#fff",border:"none",
               borderRadius:12,fontWeight:700,fontSize:15,cursor:"pointer",fontFamily:"inherit"}}>
             Done
@@ -220,7 +286,7 @@ function ManageCategoriesModal({ categories, items, onSave, onClose }) {
 }
 
 // ── Edit / Add Modal ──────────────────────────────────────
-function ItemModal({ item, onSave, onDelete, onClose, user, learnedCategories = {}, categories = DEFAULT_CATEGORIES, onUpdateCategories, items = [] }) {
+function ItemModal({ item, onSave, onDelete, onClose, user, learnedCategories = {}, categories = DEFAULT_CATEGORIES, onUpdateCategories, onUpdateCategoryIcons, categoryIcons = {}, items = [] }) {
   const [name, setName] = useState(item?.name || "");
   const [category, setCategory] = useState(item?.category || "Other");
   const [note, setNote] = useState(item?.note || "");
@@ -278,7 +344,7 @@ function ItemModal({ item, onSave, onDelete, onClose, user, learnedCategories = 
           </div>
           <select value={category} onChange={e => setCategory(e.target.value)}
             style={{...fieldStyle,background:"#fff",cursor:"pointer"}}>
-            {categories.map(c => <option key={c} value={c}>{CAT_ICONS[c] || "🏷️"} {c}</option>)}
+            {categories.map(c => <option key={c} value={c}>{categoryIcons[c] || CAT_ICONS[c] || "🏷️"} {c}</option>)}
           </select>
         </div>
 
@@ -286,7 +352,9 @@ function ItemModal({ item, onSave, onDelete, onClose, user, learnedCategories = 
           <ManageCategoriesModal
             categories={categories}
             items={items}
+            categoryIcons={categoryIcons}
             onSave={async cats => { await onUpdateCategories(cats); setShowManage(false); }}
+            onSaveIcons={onUpdateCategoryIcons}
             onClose={() => setShowManage(false)}
           />
         )}
@@ -346,7 +414,7 @@ function ItemModal({ item, onSave, onDelete, onClose, user, learnedCategories = 
 }
 
 // ── Add Item Bar ──────────────────────────────────────────
-function AddItemBar({ onAdd, items, user, learnedCategories = {}, categories = DEFAULT_CATEGORIES, onUpdateCategories }) {
+function AddItemBar({ onAdd, items, user, learnedCategories = {}, categories = DEFAULT_CATEGORIES, onUpdateCategories, categoryIcons = {}, onUpdateCategoryIcons }) {
   const [text, setText] = useState("");
   const [modalItem, setModalItem] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
@@ -413,7 +481,7 @@ function AddItemBar({ onAdd, items, user, learnedCategories = {}, categories = D
                 borderBottom:"1px solid #f5f5f5",display:"flex",alignItems:"center",gap:10}}>
               <div onMouseDown={() => quickAdd(s.name)}
                 style={{display:"flex",alignItems:"center",gap:10,flex:1,minWidth:0,cursor:"pointer"}}>
-                <span>{CAT_ICONS[s.category]}</span>
+                <span>{categoryIcons[s.category] || CAT_ICONS[s.category]}</span>
                 <div>
                   <div style={{fontWeight:600,color:"#222"}}>{s.name}</div>
                   <div style={{fontSize:11,color:"#aaa"}}>{s.category}</div>
@@ -446,6 +514,8 @@ function AddItemBar({ onAdd, items, user, learnedCategories = {}, categories = D
           user={user}
           categories={categories}
           onUpdateCategories={onUpdateCategories}
+          categoryIcons={categoryIcons}
+          onUpdateCategoryIcons={onUpdateCategoryIcons}
           items={items}
         />
       )}
@@ -491,7 +561,7 @@ function ItemRow({ item, onToggle, onEdit, toastId }) {
 }
 
 // ── Category Section ──────────────────────────────────────
-function CategorySection({ category, items, onToggle, onEdit, toastId }) {
+function CategorySection({ category, items, onToggle, onEdit, toastId, categoryIcons = {} }) {
   const [collapsed, setCollapsed] = useState(false);
   const unchecked = items.filter(i => !i.checked);
   const checked = items.filter(i => i.checked);
@@ -501,7 +571,7 @@ function CategorySection({ category, items, onToggle, onEdit, toastId }) {
       <div onClick={() => setCollapsed(c => !c)}
         style={{display:"flex",alignItems:"center",padding:"8px 16px",
           background:"#f0f4f7",cursor:"pointer",borderBottom:"1px solid #e4eaee"}}>
-        <span style={{fontSize:15,marginRight:8}}>{CAT_ICONS[category] || "📦"}</span>
+        <span style={{fontSize:15,marginRight:8}}>{categoryIcons[category] || CAT_ICONS[category] || "📦"}</span>
         <span style={{color:"#1aaae0",fontWeight:700,fontSize:14,letterSpacing:0.3}}>{category}</span>
         <span style={{marginLeft:"auto",color:"#b0b0b0",fontSize:12}}>
           {unchecked.length > 0 && <span style={{marginRight:4}}>{unchecked.length}</span>}
@@ -516,7 +586,7 @@ function CategorySection({ category, items, onToggle, onEdit, toastId }) {
 }
 
 // ── History Panel ─────────────────────────────────────────
-function HistoryPanel({ onClose, onReAdd, fetchHistory, clearHistory }) {
+function HistoryPanel({ onClose, onReAdd, fetchHistory, clearHistory, categoryIcons = {} }) {
   const [historyItems, setHistoryItems] = useState(null);
   const [clearing, setClearing] = useState(false);
 
@@ -582,7 +652,7 @@ function HistoryPanel({ onClose, onReAdd, fetchHistory, clearHistory }) {
                   style={{display:"flex",alignItems:"center",padding:"10px 16px",
                     borderBottom:"1px solid #f5f5f5"}}>
                   <span style={{fontSize:20,width:30,textAlign:"center",flexShrink:0}}>
-                    {CAT_ICONS[item.category] || "🏷️"}
+                    {categoryIcons[item.category] || CAT_ICONS[item.category] || "🏷️"}
                   </span>
                   <div style={{flex:1,marginLeft:12,minWidth:0}}>
                     <div style={{fontSize:15,color:"#1a1a2e",fontWeight:500}}>{item.name}</div>
@@ -633,7 +703,8 @@ export default function GroceryListPage({ user, onLogOut, onNavigate, activePage
 
   const { items, loading, addItem, updateItem, toggleCheck, deleteItem, clearChecked,
           fetchHistory, clearHistory, persistedLearned, persistCategory,
-          customCategories, updateCategories } = useGroceryList(activeListId);
+          customCategories, updateCategories,
+          customCategoryIcons, updateCategoryIcons } = useGroceryList(activeListId);
   const [editingItem, setEditingItem] = useState(null);
   const [showChecked, setShowChecked] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -813,7 +884,8 @@ export default function GroceryListPage({ user, onLogOut, onNavigate, activePage
 
       {/* Add Bar */}
       <AddItemBar onAdd={addItem} items={items} user={user} learnedCategories={learnedCategories}
-        categories={effectiveCategories} onUpdateCategories={updateCategories} />
+        categories={effectiveCategories} onUpdateCategories={updateCategories}
+        categoryIcons={customCategoryIcons} onUpdateCategoryIcons={updateCategoryIcons} />
 
       {/* Notification permission banner */}
       {notifBanner && (
@@ -858,7 +930,8 @@ export default function GroceryListPage({ user, onLogOut, onNavigate, activePage
         ) : (
           Object.entries(grouped).map(([cat, catItems]) => (
             <CategorySection key={cat} category={cat} items={catItems}
-              onToggle={handleToggle} onEdit={setEditingItem} toastId={toast?.id} />
+              onToggle={handleToggle} onEdit={setEditingItem} toastId={toast?.id}
+              categoryIcons={customCategoryIcons} />
           ))
         )}
         <div style={{height:90}} />
@@ -875,13 +948,16 @@ export default function GroceryListPage({ user, onLogOut, onNavigate, activePage
           }}
           fetchHistory={fetchHistory}
           clearHistory={clearHistory}
+          categoryIcons={customCategoryIcons}
         />
       )}
 
       {/* Edit Modal */}
       {editingItem && (
         <ItemModal item={editingItem} onSave={handleSave} learnedCategories={learnedCategories}
-          categories={effectiveCategories} onUpdateCategories={updateCategories} items={items}
+          categories={effectiveCategories} onUpdateCategories={updateCategories}
+          categoryIcons={customCategoryIcons} onUpdateCategoryIcons={updateCategoryIcons}
+          items={items}
           onDelete={async (item) => { await deleteItem(item, user); setEditingItem(null); }}
           onClose={() => setEditingItem(null)} user={user} />
       )}
