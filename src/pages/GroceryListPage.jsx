@@ -2,6 +2,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useGroceryList } from "../hooks/useGroceryList";
 import { useLists } from "../hooks/useLists";
+import { useMemberProfiles } from "../hooks/useMemberProfiles";
 import { DEFAULT_CATEGORIES, CAT_ICONS, guessCategory } from "../lib/categories";
 
 // ── List Tab Bar ───────────────────────────────────────────
@@ -48,15 +49,31 @@ function AddListModal({ onAdd, onClose }) {
   );
 }
 
-function EditListModal({ list, onSave, onDelete, canDelete, onClose }) {
+function EditListModal({ list, onSave, onDelete, canDelete, onClose, user, onInvite, onRemoveMember, memberProfiles }) {
   const [name, setName] = useState(list.name);
   const [emoji, setEmoji] = useState(list.emoji || "📋");
+  const [copyLabel, setCopyLabel] = useState("Generate invite link");
+
+  const isOwner = user && list.ownerUid === user.uid;
+
+  const handleInvite = async () => {
+    try {
+      await onInvite();
+      setCopyLabel("Copied!");
+      setTimeout(() => setCopyLabel("Generate invite link"), 2000);
+    } catch (e) {
+      setCopyLabel("Error — try again");
+      setTimeout(() => setCopyLabel("Generate invite link"), 2500);
+    }
+  };
+
   return (
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:1200,
       display:"flex",alignItems:"flex-end",justifyContent:"center"}}
       onClick={onClose}>
       <div style={{background:"#fff",width:"100%",maxWidth:480,borderRadius:"20px 20px 0 0",
-        padding:"24px 20px 36px",boxShadow:"0 -4px 40px rgba(0,0,0,0.18)"}}
+        padding:"24px 20px 36px",boxShadow:"0 -4px 40px rgba(0,0,0,0.18)",
+        maxHeight:"85vh",overflowY:"auto"}}
         onClick={e => e.stopPropagation()}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
           <span style={{fontSize:17,fontWeight:700,color:"#1a1a2e"}}>Edit List</span>
@@ -86,9 +103,57 @@ function EditListModal({ list, onSave, onDelete, canDelete, onClose }) {
         {canDelete && (
           <button onClick={() => { if(window.confirm(`Delete "${list.name}"? Items on this list will be removed.`)) { onDelete(); onClose(); }}}
             style={{width:"100%",padding:"13px",background:"#fff5f5",color:"#e53935",
-              border:"none",borderRadius:12,fontWeight:700,fontSize:15,cursor:"pointer",fontFamily:"inherit"}}>
+              border:"none",borderRadius:12,fontWeight:700,fontSize:15,cursor:"pointer",fontFamily:"inherit",marginBottom:16}}>
             Delete List
           </button>
+        )}
+
+        {/* Members section — visible to list owner */}
+        {isOwner && (
+          <div style={{borderTop:"1px solid #f0f0f0",paddingTop:16}}>
+            <div style={{fontSize:13,fontWeight:700,color:"#888",textTransform:"uppercase",
+              letterSpacing:"0.05em",marginBottom:10}}>Members</div>
+            {(list.members || []).map(uid => {
+              const profile = (memberProfiles || {})[uid] || {};
+              const isMe = uid === user.uid;
+              const isListOwner = uid === list.ownerUid;
+              const initials = (profile.name || profile.email || "?")[0].toUpperCase();
+              return (
+                <div key={uid} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",
+                  borderBottom:"1px solid #f8f8f8"}}>
+                  {profile.photoURL
+                    ? <img src={profile.photoURL} alt="" style={{width:32,height:32,borderRadius:"50%",objectFit:"cover"}} />
+                    : <div style={{width:32,height:32,borderRadius:"50%",background:"#d0e8f5",
+                        display:"flex",alignItems:"center",justifyContent:"center",
+                        fontWeight:700,fontSize:14,color:"#1aaae0",flexShrink:0}}>
+                        {initials}
+                      </div>
+                  }
+                  <span style={{flex:1,fontSize:14,color:"#333"}}>
+                    {profile.name || profile.email || uid}
+                    {isMe && <span style={{color:"#aaa",fontWeight:400}}> (you)</span>}
+                  </span>
+                  {isListOwner
+                    ? <span style={{fontSize:11,color:"#aaa",fontWeight:600}}>Owner</span>
+                    : <button onClick={() => onRemoveMember(uid)}
+                        style={{background:"none",border:"none",color:"#e53935",
+                          cursor:"pointer",fontSize:13,fontWeight:600,padding:"2px 6px"}}>
+                        Remove
+                      </button>
+                  }
+                </div>
+              );
+            })}
+            <button onClick={handleInvite}
+              style={{marginTop:14,width:"100%",padding:"11px",background:"#f0f9ff",
+                color:"#1aaae0",border:"1.5px solid #1aaae0",borderRadius:12,
+                fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:"inherit"}}>
+              {copyLabel}
+            </button>
+            <div style={{fontSize:11,color:"#aaa",textAlign:"center",marginTop:6}}>
+              Link is valid for 7 days. Anyone with the link can join this list.
+            </div>
+          </div>
         )}
       </div>
     </div>
@@ -597,10 +662,11 @@ function HistoryPanel({ onClose, onReAdd, fetchHistory, clearHistory }) {
 // ── Main Page ─────────────────────────────────────────────
 export default function GroceryListPage({ user, onLogOut, onNavigate, activePage = "lists",
     activeListId, onListChange }) {
-  const { lists, createList, renameList, deleteList } = useLists();
+  const { lists, createList, renameList, deleteList, inviteToList, removeMember } = useLists(user);
   const setActiveListId = onListChange;
   const [showAddList, setShowAddList] = useState(false);
   const [editingList, setEditingList] = useState(null);
+  const memberProfiles = useMemberProfiles(editingList?.members || []);
 
   const activeList = lists.find(l => l.id === activeListId) || null;
 
@@ -896,6 +962,10 @@ export default function GroceryListPage({ user, onLogOut, onNavigate, activePage
             }
           }}
           onClose={() => setEditingList(null)}
+          user={user}
+          onInvite={() => inviteToList(editingList.id)}
+          onRemoveMember={(uid) => removeMember(editingList.id, uid)}
+          memberProfiles={memberProfiles}
         />
       )}
 
