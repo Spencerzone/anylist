@@ -2,45 +2,149 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useGroceryList } from "../hooks/useGroceryList";
 import { useLists } from "../hooks/useLists";
-import { DEFAULT_CATEGORIES, CAT_ICONS, guessCategory } from "../lib/categories";
+import {
+  DEFAULT_CATEGORIES,
+  CAT_ICONS,
+  guessCategory,
+} from "../lib/categories";
 
 // ── List Tab Bar ───────────────────────────────────────────
-const LIST_EMOJIS = ["📋","🛒","🔨","💊","🏡","👕","📦","🐾","🌱","🧹","🐶","🎉"];
+const LIST_EMOJIS = [
+  "📋",
+  "🛒",
+  "🔨",
+  "💊",
+  "🏡",
+  "👕",
+  "📦",
+  "🐾",
+  "🌱",
+  "🧹",
+  "🐶",
+  "🎉",
+];
 
 function AddListModal({ onAdd, onClose }) {
   const [name, setName] = useState("");
   const [emoji, setEmoji] = useState("📋");
   return (
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:1200,
-      display:"flex",alignItems:"flex-end",justifyContent:"center"}}
-      onClick={onClose}>
-      <div style={{background:"#fff",width:"100%",maxWidth:480,borderRadius:"20px 20px 0 0",
-        padding:"24px 20px 36px",boxShadow:"0 -4px 40px rgba(0,0,0,0.18)"}}
-        onClick={e => e.stopPropagation()}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
-          <span style={{fontSize:17,fontWeight:700,color:"#1a1a2e"}}>New List</span>
-          <button onClick={onClose} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"#aaa"}}>✕</button>
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.6)",
+        zIndex: 1200,
+        display: "flex",
+        alignItems: "flex-end",
+        justifyContent: "center",
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          background: "#fff",
+          width: "100%",
+          maxWidth: 480,
+          borderRadius: "20px 20px 0 0",
+          padding: "24px 20px 36px",
+          boxShadow: "0 -4px 40px rgba(0,0,0,0.18)",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 18,
+          }}
+        >
+          <span style={{ fontSize: 17, fontWeight: 700, color: "#1a1a2e" }}>
+            New List
+          </span>
+          <button
+            onClick={onClose}
+            style={{
+              background: "none",
+              border: "none",
+              fontSize: 22,
+              cursor: "pointer",
+              color: "#aaa",
+            }}
+          >
+            ✕
+          </button>
         </div>
-        <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:16}}>
-          {LIST_EMOJIS.map(e => (
-            <button key={e} onClick={() => setEmoji(e)}
-              style={{fontSize:22,padding:"6px 10px",borderRadius:10,cursor:"pointer",
-                border: emoji===e ? "2.5px solid #1aaae0" : "2px solid #e8e8e8",
-                background: emoji===e ? "#e8f7fd" : "#fff"}}>
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 8,
+            marginBottom: 16,
+          }}
+        >
+          {LIST_EMOJIS.map((e) => (
+            <button
+              key={e}
+              onClick={() => setEmoji(e)}
+              style={{
+                fontSize: 22,
+                padding: "6px 10px",
+                borderRadius: 10,
+                cursor: "pointer",
+                border:
+                  emoji === e ? "2.5px solid #1aaae0" : "2px solid #e8e8e8",
+                background: emoji === e ? "#e8f7fd" : "#fff",
+              }}
+            >
               {e}
             </button>
           ))}
         </div>
-        <input autoFocus value={name} onChange={e => setName(e.target.value)}
+        <input
+          autoFocus
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           placeholder="List name (e.g. Bunnings, Pharmacy…)"
-          onKeyDown={e => { if (e.key==="Enter" && name.trim()) { onAdd(name.trim(), emoji); onClose(); }}}
-          style={{width:"100%",fontSize:16,padding:"12px 14px",borderRadius:10,boxSizing:"border-box",
-            border:"1.5px solid #ddd",outline:"none",fontFamily:"inherit",marginBottom:14}} />
-        <button onClick={() => { if(name.trim()) { onAdd(name.trim(), emoji); onClose(); }}}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && name.trim()) {
+              onAdd(name.trim(), emoji);
+              onClose();
+            }
+          }}
+          style={{
+            width: "100%",
+            fontSize: 16,
+            padding: "12px 14px",
+            borderRadius: 10,
+            boxSizing: "border-box",
+            border: "1.5px solid #ddd",
+            outline: "none",
+            fontFamily: "inherit",
+            marginBottom: 14,
+          }}
+        />
+        <button
+          onClick={() => {
+            if (name.trim()) {
+              onAdd(name.trim(), emoji);
+              onClose();
+            }
+          }}
           disabled={!name.trim()}
-          style={{width:"100%",padding:"13px",background: name.trim() ? "#1aaae0" : "#ccc",
-            color:"#fff",border:"none",borderRadius:12,fontWeight:700,fontSize:15,
-            cursor: name.trim() ? "pointer" : "default",fontFamily:"inherit"}}>
+          style={{
+            width: "100%",
+            padding: "13px",
+            background: name.trim() ? "#1aaae0" : "#ccc",
+            color: "#fff",
+            border: "none",
+            borderRadius: 12,
+            fontWeight: 700,
+            fontSize: 15,
+            cursor: name.trim() ? "pointer" : "default",
+            fontFamily: "inherit",
+          }}
+        >
           Create List
         </button>
       </div>
@@ -52,41 +156,150 @@ function EditListModal({ list, onSave, onDelete, canDelete, onClose }) {
   const [name, setName] = useState(list.name);
   const [emoji, setEmoji] = useState(list.emoji || "📋");
   return (
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:1200,
-      display:"flex",alignItems:"flex-end",justifyContent:"center"}}
-      onClick={onClose}>
-      <div style={{background:"#fff",width:"100%",maxWidth:480,borderRadius:"20px 20px 0 0",
-        padding:"24px 20px 36px",boxShadow:"0 -4px 40px rgba(0,0,0,0.18)"}}
-        onClick={e => e.stopPropagation()}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
-          <span style={{fontSize:17,fontWeight:700,color:"#1a1a2e"}}>Edit List</span>
-          <button onClick={onClose} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"#aaa"}}>✕</button>
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.6)",
+        zIndex: 1200,
+        display: "flex",
+        alignItems: "flex-end",
+        justifyContent: "center",
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          background: "#fff",
+          width: "100%",
+          maxWidth: 480,
+          borderRadius: "20px 20px 0 0",
+          padding: "24px 20px 36px",
+          boxShadow: "0 -4px 40px rgba(0,0,0,0.18)",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 18,
+          }}
+        >
+          <span style={{ fontSize: 17, fontWeight: 700, color: "#1a1a2e" }}>
+            Edit List
+          </span>
+          <button
+            onClick={onClose}
+            style={{
+              background: "none",
+              border: "none",
+              fontSize: 22,
+              cursor: "pointer",
+              color: "#aaa",
+            }}
+          >
+            ✕
+          </button>
         </div>
-        <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:16}}>
-          {LIST_EMOJIS.map(e => (
-            <button key={e} onClick={() => setEmoji(e)}
-              style={{fontSize:22,padding:"6px 10px",borderRadius:10,cursor:"pointer",
-                border: emoji===e ? "2.5px solid #1aaae0" : "2px solid #e8e8e8",
-                background: emoji===e ? "#e8f7fd" : "#fff"}}>
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 8,
+            marginBottom: 16,
+          }}
+        >
+          {LIST_EMOJIS.map((e) => (
+            <button
+              key={e}
+              onClick={() => setEmoji(e)}
+              style={{
+                fontSize: 22,
+                padding: "6px 10px",
+                borderRadius: 10,
+                cursor: "pointer",
+                border:
+                  emoji === e ? "2.5px solid #1aaae0" : "2px solid #e8e8e8",
+                background: emoji === e ? "#e8f7fd" : "#fff",
+              }}
+            >
               {e}
             </button>
           ))}
         </div>
-        <input autoFocus value={name} onChange={e => setName(e.target.value)}
-          onKeyDown={e => { if (e.key==="Enter" && name.trim()) { onSave(name.trim(), emoji); onClose(); }}}
-          style={{width:"100%",fontSize:16,padding:"12px 14px",borderRadius:10,boxSizing:"border-box",
-            border:"1.5px solid #ddd",outline:"none",fontFamily:"inherit",marginBottom:14}} />
-        <button onClick={() => { if(name.trim()) { onSave(name.trim(), emoji); onClose(); }}}
+        <input
+          autoFocus
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && name.trim()) {
+              onSave(name.trim(), emoji);
+              onClose();
+            }
+          }}
+          style={{
+            width: "100%",
+            fontSize: 16,
+            padding: "12px 14px",
+            borderRadius: 10,
+            boxSizing: "border-box",
+            border: "1.5px solid #ddd",
+            outline: "none",
+            fontFamily: "inherit",
+            marginBottom: 14,
+          }}
+        />
+        <button
+          onClick={() => {
+            if (name.trim()) {
+              onSave(name.trim(), emoji);
+              onClose();
+            }
+          }}
           disabled={!name.trim()}
-          style={{width:"100%",padding:"13px",background: name.trim() ? "#1aaae0" : "#ccc",
-            color:"#fff",border:"none",borderRadius:12,fontWeight:700,fontSize:15,
-            cursor: name.trim() ? "pointer" : "default",fontFamily:"inherit",marginBottom:10}}>
+          style={{
+            width: "100%",
+            padding: "13px",
+            background: name.trim() ? "#1aaae0" : "#ccc",
+            color: "#fff",
+            border: "none",
+            borderRadius: 12,
+            fontWeight: 700,
+            fontSize: 15,
+            cursor: name.trim() ? "pointer" : "default",
+            fontFamily: "inherit",
+            marginBottom: 10,
+          }}
+        >
           Save
         </button>
         {canDelete && (
-          <button onClick={() => { if(window.confirm(`Delete "${list.name}"? Items on this list will be removed.`)) { onDelete(); onClose(); }}}
-            style={{width:"100%",padding:"13px",background:"#fff5f5",color:"#e53935",
-              border:"none",borderRadius:12,fontWeight:700,fontSize:15,cursor:"pointer",fontFamily:"inherit"}}>
+          <button
+            onClick={() => {
+              if (
+                window.confirm(
+                  `Delete "${list.name}"? Items on this list will be removed.`,
+                )
+              ) {
+                onDelete();
+                onClose();
+              }
+            }}
+            style={{
+              width: "100%",
+              padding: "13px",
+              background: "#fff5f5",
+              color: "#e53935",
+              border: "none",
+              borderRadius: 12,
+              fontWeight: 700,
+              fontSize: 15,
+              cursor: "pointer",
+              fontFamily: "inherit",
+            }}
+          >
             Delete List
           </button>
         )}
@@ -97,28 +310,69 @@ function EditListModal({ list, onSave, onDelete, canDelete, onClose }) {
 
 function ListTabBar({ lists, activeId, onSelect, onCreate, onEdit }) {
   return (
-    <div style={{display:"flex",alignItems:"center",gap:6,overflowX:"auto",
-      padding:"0 12px 12px",scrollbarWidth:"none",WebkitOverflowScrolling:"touch"}}>
-      {lists.map(list => {
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+        overflowX: "auto",
+        padding: "0 12px 12px",
+        scrollbarWidth: "none",
+        WebkitOverflowScrolling: "touch",
+      }}
+    >
+      {lists.map((list) => {
         const active = list.id === activeId;
         return (
-          <button key={list.id}
-            onClick={() => active ? onEdit(list) : onSelect(list.id)}
-            style={{flexShrink:0,display:"flex",alignItems:"center",gap:5,
-              padding:"6px 13px",borderRadius:20,fontWeight: active ? 700 : 500,
-              fontSize:13,cursor:"pointer",fontFamily:"inherit",transition:"all 0.15s",
-              background: active ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.1)",
-              color:"#fff",border: active ? "1.5px solid rgba(255,255,255,0.7)" : "1.5px solid rgba(255,255,255,0.25)"}}>
+          <button
+            key={list.id}
+            onClick={() => (active ? onEdit(list) : onSelect(list.id))}
+            style={{
+              flexShrink: 0,
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
+              padding: "6px 13px",
+              borderRadius: 20,
+              fontWeight: active ? 700 : 500,
+              fontSize: 13,
+              cursor: "pointer",
+              fontFamily: "inherit",
+              transition: "all 0.15s",
+              background: active
+                ? "rgba(255,255,255,0.25)"
+                : "rgba(255,255,255,0.1)",
+              color: "#fff",
+              border: active
+                ? "1.5px solid rgba(255,255,255,0.7)"
+                : "1.5px solid rgba(255,255,255,0.25)",
+            }}
+          >
             <span>{list.emoji || "📋"}</span>
             <span>{list.name}</span>
-            {active && <span style={{fontSize:11,opacity:0.75,marginLeft:1}}>▾</span>}
+            {active && (
+              <span style={{ fontSize: 11, opacity: 0.75, marginLeft: 1 }}>
+                ▾
+              </span>
+            )}
           </button>
         );
       })}
-      <button onClick={onCreate}
-        style={{flexShrink:0,padding:"6px 12px",borderRadius:20,fontSize:13,cursor:"pointer",
-          fontFamily:"inherit",fontWeight:600,background:"rgba(255,255,255,0.08)",
-          color:"rgba(255,255,255,0.8)",border:"1.5px dashed rgba(255,255,255,0.4)"}}>
+      <button
+        onClick={onCreate}
+        style={{
+          flexShrink: 0,
+          padding: "6px 12px",
+          borderRadius: 20,
+          fontSize: 13,
+          cursor: "pointer",
+          fontFamily: "inherit",
+          fontWeight: 600,
+          background: "rgba(255,255,255,0.08)",
+          color: "rgba(255,255,255,0.8)",
+          border: "1.5px dashed rgba(255,255,255,0.4)",
+        }}
+      >
         + New list
       </button>
     </div>
@@ -127,32 +381,110 @@ function ListTabBar({ lists, activeId, onSelect, onCreate, onEdit }) {
 
 // ── Emoji picker options ──────────────────────────────────
 const ICON_PICKER_EMOJIS = [
-  "🥦","🥕","🍎","🍋","🥑","🌽","🍅","🧅","🧄","🫑",
-  "🍞","🥐","🥖","🥨","🧁","🎂","🍰","🥯","🫓",
-  "🧀","🥛","🥚","🧈","🍦","🍧",
-  "🥩","🍗","🌭","🥓","🍖",
-  "🐟","🦐","🦑","🦞","🦀","🍣",
-  "🥫","🫙","🧂","🍯","🥜","🌰",
-  "🍿","🍫","🍬","🍭","🍪","🧇","🥞","🧆",
-  "🥤","☕","🫖","🍷","🍺","🧃","🧊",
-  "🧴","🧼","🪥","💊","💉","🩺",
-  "🧹","🧺","🪣","🧻","🪴",
-  "🐾","🐕","🐈",
-  "🍼","👶",
-  "🏠","🔧","🪚","🛠️",
-  "📦","🏷️","🛒","🎁","⭐","❄️",
+  "🥦",
+  "🥕",
+  "🍎",
+  "🍋",
+  "🥑",
+  "🌽",
+  "🍅",
+  "🧅",
+  "🧄",
+  "🫑",
+  "🍞",
+  "🥐",
+  "🥖",
+  "🥨",
+  "🧁",
+  "🎂",
+  "🍰",
+  "🥯",
+  "🫓",
+  "🧀",
+  "🥛",
+  "🥚",
+  "🧈",
+  "🍦",
+  "🚀",
+  "🥩",
+  "🍗",
+  "🌭",
+  "🥓",
+  "☀️",
+  "🐟",
+  "🦐",
+  "🦑",
+  "🔍",
+  "🦀",
+  "🍣",
+  "🥫",
+  "🫙",
+  "🧂",
+  "🍯",
+  "🥜",
+  "🌰",
+  "🍿",
+  "🍫",
+  "🍬",
+  "🍭",
+  "🍪",
+  "👖",
+  "👕",
+  "🍣",
+  "🥤",
+  "☕",
+  "🫖",
+  "🍷",
+  "🍺",
+  "🧃",
+  "🧊",
+  "🧴",
+  "⛱️",
+  "🪥",
+  "💊",
+  "💉",
+  "🩺",
+  "🧹",
+  "🌻",
+  "💰",
+  "🌏",
+  "🪴",
+  "🐾",
+  "🐕",
+  "🐈",
+  "🍼",
+  "👶",
+  "🏠",
+  "🔧",
+  "⚽",
+  "🔨",
+  "📦",
+  "🏷️",
+  "🛒",
+  "🎁",
+  "⭐",
+  "❄️",
 ];
 
 // ── Manage Categories Modal ────────────────────────────────
-function ManageCategoriesModal({ categories, items, onSave, onClose, categoryIcons = {}, onSaveIcons }) {
-  const [cats, setCats] = useState(() => [...categories].sort((a, b) => a.localeCompare(b)));
+function ManageCategoriesModal({
+  categories,
+  items,
+  onSave,
+  onClose,
+  categoryIcons = {},
+  onSaveIcons,
+}) {
+  const [cats, setCats] = useState(() =>
+    [...categories].sort((a, b) => a.localeCompare(b)),
+  );
   const [newName, setNewName] = useState("");
   const [renamingIdx, setRenamingIdx] = useState(null);
   const [renameVal, setRenameVal] = useState("");
   const [icons, setIcons] = useState({ ...categoryIcons });
   const [pickingIconIdx, setPickingIconIdx] = useState(null);
 
-  const inUse = cat => items.some(i => i.category === cat);
+  const inUse = (cat) => items.some((i) => i.category === cat);
 
   const commitRename = () => {
     const val = renameVal.trim();
@@ -160,9 +492,18 @@ function ManageCategoriesModal({ categories, items, onSave, onClose, categoryIco
       const oldName = cats[renamingIdx];
       // Carry over icon if one was set for old name
       if (icons[oldName]) {
-        setIcons(prev => { const n = {...prev}; n[val] = n[oldName]; delete n[oldName]; return n; });
+        setIcons((prev) => {
+          const n = { ...prev };
+          n[val] = n[oldName];
+          delete n[oldName];
+          return n;
+        });
       }
-      setCats(c => [...c.map((x, i) => i === renamingIdx ? val : x)].sort((a, b) => a.localeCompare(b)));
+      setCats((c) =>
+        [...c.map((x, i) => (i === renamingIdx ? val : x))].sort((a, b) =>
+          a.localeCompare(b),
+        ),
+      );
     }
     setRenamingIdx(null);
   };
@@ -170,7 +511,7 @@ function ManageCategoriesModal({ categories, items, onSave, onClose, categoryIco
   const addCategory = () => {
     const v = newName.trim();
     if (v && !cats.includes(v)) {
-      setCats(c => [...c, v].sort((a, b) => a.localeCompare(b)));
+      setCats((c) => [...c, v].sort((a, b) => a.localeCompare(b)));
       setNewName("");
     }
   };
@@ -178,74 +519,237 @@ function ManageCategoriesModal({ categories, items, onSave, onClose, categoryIco
   const effectiveIcon = (cat) => icons[cat] || CAT_ICONS[cat] || "🏷️";
 
   return (
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:1100,
-      display:"flex",alignItems:"flex-end",justifyContent:"center"}}
-      onClick={() => { setPickingIconIdx(null); onClose(); }}>
-      <div style={{background:"#fff",width:"100%",maxWidth:480,borderRadius:"20px 20px 0 0",
-        padding:"20px 0 36px",boxShadow:"0 -4px 40px rgba(0,0,0,0.18)",
-        display:"flex",flexDirection:"column",maxHeight:"82vh"}}
-        onClick={e => e.stopPropagation()}>
-
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",
-          padding:"0 20px 14px",borderBottom:"1px solid #f0f0f0"}}>
-          <span style={{fontSize:17,fontWeight:700,color:"#1a1a2e"}}>Edit Categories</span>
-          <button onClick={onClose} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"#aaa"}}>✕</button>
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.6)",
+        zIndex: 1100,
+        display: "flex",
+        alignItems: "flex-end",
+        justifyContent: "center",
+      }}
+      onClick={() => {
+        setPickingIconIdx(null);
+        onClose();
+      }}
+    >
+      <div
+        style={{
+          background: "#fff",
+          width: "100%",
+          maxWidth: 480,
+          borderRadius: "20px 20px 0 0",
+          padding: "20px 0 36px",
+          boxShadow: "0 -4px 40px rgba(0,0,0,0.18)",
+          display: "flex",
+          flexDirection: "column",
+          maxHeight: "82vh",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "0 20px 14px",
+            borderBottom: "1px solid #f0f0f0",
+          }}
+        >
+          <span style={{ fontSize: 17, fontWeight: 700, color: "#1a1a2e" }}>
+            Edit Categories
+          </span>
+          <button
+            onClick={onClose}
+            style={{
+              background: "none",
+              border: "none",
+              fontSize: 22,
+              cursor: "pointer",
+              color: "#aaa",
+            }}
+          >
+            ✕
+          </button>
         </div>
 
-        <div style={{overflowY:"auto",flex:1}} onClick={() => setPickingIconIdx(null)}>
+        <div
+          style={{ overflowY: "auto", flex: 1 }}
+          onClick={() => setPickingIconIdx(null)}
+        >
           {cats.map((cat, i) => {
             const used = inUse(cat);
             return (
               <div key={cat}>
-                <div style={{display:"flex",alignItems:"center",gap:10,
-                  padding:"9px 20px",borderBottom:"1px solid #f8f8f8"}}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "9px 20px",
+                    borderBottom: "1px solid #f8f8f8",
+                  }}
+                >
                   <button
-                    onClick={e => { e.stopPropagation(); setPickingIconIdx(pickingIconIdx === i ? null : i); setRenamingIdx(null); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPickingIconIdx(pickingIconIdx === i ? null : i);
+                      setRenamingIdx(null);
+                    }}
                     title="Change icon"
-                    style={{fontSize:19,width:32,height:32,display:"flex",alignItems:"center",
-                      justifyContent:"center",flexShrink:0,background:"#f4f6f8",border:"1.5px solid #e8e8e8",
-                      borderRadius:8,cursor:"pointer",padding:0}}>
+                    style={{
+                      fontSize: 19,
+                      width: 32,
+                      height: 32,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      background: "#f4f6f8",
+                      border: "1.5px solid #e8e8e8",
+                      borderRadius: 8,
+                      cursor: "pointer",
+                      padding: 0,
+                    }}
+                  >
                     {effectiveIcon(cat)}
                   </button>
-                  {renamingIdx === i
-                    ? <input autoFocus value={renameVal}
-                        onChange={e => setRenameVal(e.target.value)}
-                        onBlur={commitRename}
-                        onKeyDown={e => { if (e.key === "Enter") commitRename(); if (e.key === "Escape") setRenamingIdx(null); }}
-                        style={{flex:1,fontSize:15,border:"1.5px solid #1aaae0",borderRadius:8,
-                          padding:"5px 10px",outline:"none",fontFamily:"inherit"}} />
-                    : <span style={{flex:1,fontSize:15,color:"#333"}}>{cat}</span>
-                  }
-                  <button onClick={() => !used && (setPickingIconIdx(null), setRenamingIdx(i), setRenameVal(cat))}
+                  {renamingIdx === i ? (
+                    <input
+                      autoFocus
+                      value={renameVal}
+                      onChange={(e) => setRenameVal(e.target.value)}
+                      onBlur={commitRename}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") commitRename();
+                        if (e.key === "Escape") setRenamingIdx(null);
+                      }}
+                      style={{
+                        flex: 1,
+                        fontSize: 15,
+                        border: "1.5px solid #1aaae0",
+                        borderRadius: 8,
+                        padding: "5px 10px",
+                        outline: "none",
+                        fontFamily: "inherit",
+                      }}
+                    />
+                  ) : (
+                    <span style={{ flex: 1, fontSize: 15, color: "#333" }}>
+                      {cat}
+                    </span>
+                  )}
+                  <button
+                    onClick={() =>
+                      !used &&
+                      (setPickingIconIdx(null),
+                      setRenamingIdx(i),
+                      setRenameVal(cat))
+                    }
                     title={used ? "In use — move items first" : "Rename"}
-                    style={{background:"none",border:"none",fontSize:15,padding:4,
-                      cursor:used?"default":"pointer",opacity:used?0.25:0.65}}>✏️</button>
-                  <button onClick={() => !used && setCats(c => c.filter((_,j) => j !== i))}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      fontSize: 15,
+                      padding: 4,
+                      cursor: used ? "default" : "pointer",
+                      opacity: used ? 0.25 : 0.65,
+                    }}
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    onClick={() =>
+                      !used && setCats((c) => c.filter((_, j) => j !== i))
+                    }
                     title={used ? "In use — move items first" : "Delete"}
-                    style={{background:"none",border:"none",fontSize:15,padding:4,
-                      cursor:used?"default":"pointer",opacity:used?0.2:0.65}}>🗑️</button>
+                    style={{
+                      background: "none",
+                      border: "none",
+                      fontSize: 15,
+                      padding: 4,
+                      cursor: used ? "default" : "pointer",
+                      opacity: used ? 0.2 : 0.65,
+                    }}
+                  >
+                    🗑️
+                  </button>
                 </div>
                 {pickingIconIdx === i && (
-                  <div style={{padding:"10px 20px 14px",background:"#f8f9fb",borderBottom:"1px solid #ececec"}}
-                    onClick={e => e.stopPropagation()}>
-                    <div style={{fontSize:11,fontWeight:700,color:"#aaa",textTransform:"uppercase",
-                      letterSpacing:0.8,marginBottom:8}}>Choose icon</div>
-                    <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-                      {ICON_PICKER_EMOJIS.map(emoji => (
-                        <button key={emoji} onClick={() => { setIcons(prev => ({...prev, [cat]: emoji})); setPickingIconIdx(null); }}
-                          style={{fontSize:20,width:36,height:36,display:"flex",alignItems:"center",
-                            justifyContent:"center",border: icons[cat] === emoji || (!icons[cat] && CAT_ICONS[cat] === emoji)
-                              ? "2px solid #1aaae0" : "1.5px solid #e8e8e8",
-                            borderRadius:8,background:"#fff",cursor:"pointer",padding:0}}>
+                  <div
+                    style={{
+                      padding: "10px 20px 14px",
+                      background: "#f8f9fb",
+                      borderBottom: "1px solid #ececec",
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: "#aaa",
+                        textTransform: "uppercase",
+                        letterSpacing: 0.8,
+                        marginBottom: 8,
+                      }}
+                    >
+                      Choose icon
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {ICON_PICKER_EMOJIS.map((emoji) => (
+                        <button
+                          key={emoji}
+                          onClick={() => {
+                            setIcons((prev) => ({ ...prev, [cat]: emoji }));
+                            setPickingIconIdx(null);
+                          }}
+                          style={{
+                            fontSize: 20,
+                            width: 36,
+                            height: 36,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            border:
+                              icons[cat] === emoji ||
+                              (!icons[cat] && CAT_ICONS[cat] === emoji)
+                                ? "2px solid #1aaae0"
+                                : "1.5px solid #e8e8e8",
+                            borderRadius: 8,
+                            background: "#fff",
+                            cursor: "pointer",
+                            padding: 0,
+                          }}
+                        >
                           {emoji}
                         </button>
                       ))}
                       {(icons[cat] || CAT_ICONS[cat]) && (
-                        <button onClick={() => { setIcons(prev => { const n={...prev}; delete n[cat]; return n; }); setPickingIconIdx(null); }}
+                        <button
+                          onClick={() => {
+                            setIcons((prev) => {
+                              const n = { ...prev };
+                              delete n[cat];
+                              return n;
+                            });
+                            setPickingIconIdx(null);
+                          }}
                           title="Reset to default"
-                          style={{fontSize:11,fontWeight:700,color:"#888",padding:"0 10px",height:36,
-                            border:"1.5px solid #e8e8e8",borderRadius:8,background:"#fff",cursor:"pointer",
-                            whiteSpace:"nowrap"}}>
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 700,
+                            color: "#888",
+                            padding: "0 10px",
+                            height: 36,
+                            border: "1.5px solid #e8e8e8",
+                            borderRadius: 8,
+                            background: "#fff",
+                            cursor: "pointer",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
                           Reset
                         </button>
                       )}
@@ -257,26 +761,71 @@ function ManageCategoriesModal({ categories, items, onSave, onClose, categoryIco
           })}
         </div>
 
-        <div style={{padding:"12px 20px 0",borderTop:"1px solid #f0f0f0",display:"flex",gap:8}}>
-          <input value={newName} onChange={e => setNewName(e.target.value)}
-            onKeyDown={e => { if (e.key === "Enter") addCategory(); }}
+        <div
+          style={{
+            padding: "12px 20px 0",
+            borderTop: "1px solid #f0f0f0",
+            display: "flex",
+            gap: 8,
+          }}
+        >
+          <input
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") addCategory();
+            }}
             placeholder="New category name..."
-            style={{flex:1,padding:"10px 14px",fontSize:14,border:"1.5px solid #e8e8e8",
-              borderRadius:10,outline:"none",fontFamily:"inherit",boxSizing:"border-box"}} />
+            style={{
+              flex: 1,
+              padding: "10px 14px",
+              fontSize: 14,
+              border: "1.5px solid #e8e8e8",
+              borderRadius: 10,
+              outline: "none",
+              fontFamily: "inherit",
+              boxSizing: "border-box",
+            }}
+          />
           <button
             onClick={addCategory}
             disabled={!newName.trim() || cats.includes(newName.trim())}
-            style={{padding:"10px 18px",background:"#1aaae0",color:"#fff",border:"none",
-              borderRadius:10,fontWeight:700,fontSize:14,cursor:"pointer",
-              opacity:(!newName.trim() || cats.includes(newName.trim())) ? 0.45 : 1}}>
+            style={{
+              padding: "10px 18px",
+              background: "#1aaae0",
+              color: "#fff",
+              border: "none",
+              borderRadius: 10,
+              fontWeight: 700,
+              fontSize: 14,
+              cursor: "pointer",
+              opacity:
+                !newName.trim() || cats.includes(newName.trim()) ? 0.45 : 1,
+            }}
+          >
             Add
           </button>
         </div>
 
-        <div style={{padding:"12px 20px 0"}}>
-          <button onClick={() => { onSaveIcons && onSaveIcons(icons); onSave(cats); }}
-            style={{width:"100%",padding:"13px",background:"#1aaae0",color:"#fff",border:"none",
-              borderRadius:12,fontWeight:700,fontSize:15,cursor:"pointer",fontFamily:"inherit"}}>
+        <div style={{ padding: "12px 20px 0" }}>
+          <button
+            onClick={() => {
+              onSaveIcons && onSaveIcons(icons);
+              onSave(cats);
+            }}
+            style={{
+              width: "100%",
+              padding: "13px",
+              background: "#1aaae0",
+              color: "#fff",
+              border: "none",
+              borderRadius: 12,
+              fontWeight: 700,
+              fontSize: 15,
+              cursor: "pointer",
+              fontFamily: "inherit",
+            }}
+          >
             Done
           </button>
         </div>
@@ -286,7 +835,19 @@ function ManageCategoriesModal({ categories, items, onSave, onClose, categoryIco
 }
 
 // ── Edit / Add Modal ──────────────────────────────────────
-function ItemModal({ item, onSave, onDelete, onClose, user, learnedCategories = {}, categories = DEFAULT_CATEGORIES, onUpdateCategories, onUpdateCategoryIcons, categoryIcons = {}, items = [] }) {
+function ItemModal({
+  item,
+  onSave,
+  onDelete,
+  onClose,
+  user,
+  learnedCategories = {},
+  categories = DEFAULT_CATEGORIES,
+  onUpdateCategories,
+  onUpdateCategoryIcons,
+  categoryIcons = {},
+  items = [],
+}) {
   const [name, setName] = useState(item?.name || "");
   const [category, setCategory] = useState(item?.category || "Other");
   const [note, setNote] = useState(item?.note || "");
@@ -298,53 +859,135 @@ function ItemModal({ item, onSave, onDelete, onClose, user, learnedCategories = 
 
   useEffect(() => {
     nameRef.current?.focus();
-    if (item?.name && !item?.id) setCategory(guessCategory(item.name, learnedCategories));
+    if (item?.name && !item?.id)
+      setCategory(guessCategory(item.name, learnedCategories));
   }, []);
 
-  const save = () => name.trim() && onSave({ ...item, name: name.trim(), category, note, quantity, packageSize }, user);
-  const fieldStyle = {width:"100%",padding:"11px 14px",fontSize:15,border:"1.5px solid #e8e8e8",
-    borderRadius:10,marginTop:5,outline:"none",fontFamily:"inherit",boxSizing:"border-box"};
-  const labelStyle = {fontSize:11,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:1};
+  const save = () =>
+    name.trim() &&
+    onSave(
+      { ...item, name: name.trim(), category, note, quantity, packageSize },
+      user,
+    );
+  const fieldStyle = {
+    width: "100%",
+    padding: "11px 14px",
+    fontSize: 15,
+    border: "1.5px solid #e8e8e8",
+    borderRadius: 10,
+    marginTop: 5,
+    outline: "none",
+    fontFamily: "inherit",
+    boxSizing: "border-box",
+  };
+  const labelStyle = {
+    fontSize: 11,
+    fontWeight: 700,
+    color: "#999",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  };
 
   return (
     <div
-      style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",zIndex:1000,
-        display:"flex",alignItems:"flex-end",justifyContent:"center" }}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.45)",
+        zIndex: 1000,
+        display: "flex",
+        alignItems: "flex-end",
+        justifyContent: "center",
+      }}
       onClick={onClose}
     >
       <div
-        style={{ background:"#fff",width:"100%",maxWidth:480,borderRadius:"20px 20px 0 0",
-          padding:"24px 20px 36px",boxShadow:"0 -4px 40px rgba(0,0,0,0.18)" }}
-        onClick={e => e.stopPropagation()}
+        style={{
+          background: "#fff",
+          width: "100%",
+          maxWidth: 480,
+          borderRadius: "20px 20px 0 0",
+          padding: "24px 20px 36px",
+          boxShadow: "0 -4px 40px rgba(0,0,0,0.18)",
+        }}
+        onClick={(e) => e.stopPropagation()}
       >
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
-          <span style={{fontSize:17,fontWeight:700,color:"#1a1a2e"}}>{isNew ? "Add Item" : "Edit Item"}</span>
-          <button onClick={onClose} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"#aaa"}}>✕</button>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 20,
+          }}
+        >
+          <span style={{ fontSize: 17, fontWeight: 700, color: "#1a1a2e" }}>
+            {isNew ? "Add Item" : "Edit Item"}
+          </span>
+          <button
+            onClick={onClose}
+            style={{
+              background: "none",
+              border: "none",
+              fontSize: 22,
+              cursor: "pointer",
+              color: "#aaa",
+            }}
+          >
+            ✕
+          </button>
         </div>
 
         {/* Name */}
-        <div style={{marginBottom:16}}>
+        <div style={{ marginBottom: 16 }}>
           <label style={labelStyle}>Item Name</label>
-          <input ref={nameRef} value={name} onChange={e => setName(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && save()}
+          <input
+            ref={nameRef}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && save()}
             placeholder="e.g. Milk, Bread..."
-            style={fieldStyle} />
+            style={fieldStyle}
+          />
         </div>
 
         {/* Category */}
-        <div style={{marginBottom:16}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div style={{ marginBottom: 16 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
             <label style={labelStyle}>Category</label>
             {onUpdateCategories && (
-              <button onClick={() => setShowManage(true)}
+              <button
+                onClick={() => setShowManage(true)}
                 title="Edit categories"
-                style={{background:"none",border:"none",cursor:"pointer",padding:"2px 4px",
-                  fontSize:14,opacity:0.55,lineHeight:1}}>✏️</button>
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "2px 4px",
+                  fontSize: 14,
+                  opacity: 0.55,
+                  lineHeight: 1,
+                }}
+              >
+                ✏️
+              </button>
             )}
           </div>
-          <select value={category} onChange={e => setCategory(e.target.value)}
-            style={{...fieldStyle,background:"#fff",cursor:"pointer"}}>
-            {categories.map(c => <option key={c} value={c}>{categoryIcons[c] || CAT_ICONS[c] || "🏷️"} {c}</option>)}
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            style={{ ...fieldStyle, background: "#fff", cursor: "pointer" }}
+          >
+            {categories.map((c) => (
+              <option key={c} value={c}>
+                {categoryIcons[c] || CAT_ICONS[c] || "🏷️"} {c}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -353,58 +996,144 @@ function ItemModal({ item, onSave, onDelete, onClose, user, learnedCategories = 
             categories={categories}
             items={items}
             categoryIcons={categoryIcons}
-            onSave={async cats => { await onUpdateCategories(cats); setShowManage(false); }}
+            onSave={async (cats) => {
+              await onUpdateCategories(cats);
+              setShowManage(false);
+            }}
             onSaveIcons={onUpdateCategoryIcons}
             onClose={() => setShowManage(false)}
           />
         )}
 
         {/* Quantity + Package Size side by side */}
-        <div style={{display:"flex",gap:12,marginBottom:16}}>
-          <div style={{flex:1}}>
+        <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
+          <div style={{ flex: 1 }}>
             <label style={labelStyle}>Quantity</label>
-            <div style={{display:"flex",alignItems:"center",gap:6,marginTop:5}}>
-              <button onMouseDown={e => { e.preventDefault(); setQuantity(q => String(Math.max(0, (parseInt(q)||0) - 1) || "")); }}
-                style={{width:36,height:36,borderRadius:8,border:"1.5px solid #e8e8e8",background:"#f4f6f8",
-                  fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>−</button>
-              <input value={quantity} onChange={e => setQuantity(e.target.value)}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                marginTop: 5,
+              }}
+            >
+              <button
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  setQuantity((q) =>
+                    String(Math.max(0, (parseInt(q) || 0) - 1) || ""),
+                  );
+                }}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 8,
+                  border: "1.5px solid #e8e8e8",
+                  background: "#f4f6f8",
+                  fontSize: 18,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                −
+              </button>
+              <input
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
                 placeholder="—"
-                style={{...fieldStyle,marginTop:0,textAlign:"center",padding:"8px 6px",flex:1,minWidth:0}} />
-              <button onMouseDown={e => { e.preventDefault(); setQuantity(q => String((parseInt(q)||0) + 1)); }}
-                style={{width:36,height:36,borderRadius:8,border:"1.5px solid #e8e8e8",background:"#f4f6f8",
-                  fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>+</button>
+                style={{
+                  ...fieldStyle,
+                  marginTop: 0,
+                  textAlign: "center",
+                  padding: "8px 6px",
+                  flex: 1,
+                  minWidth: 0,
+                }}
+              />
+              <button
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  setQuantity((q) => String((parseInt(q) || 0) + 1));
+                }}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 8,
+                  border: "1.5px solid #e8e8e8",
+                  background: "#f4f6f8",
+                  fontSize: 18,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                +
+              </button>
             </div>
           </div>
-          <div style={{flex:1}}>
+          <div style={{ flex: 1 }}>
             <label style={labelStyle}>Package Size</label>
-            <input value={packageSize} onChange={e => setPackageSize(e.target.value)}
+            <input
+              value={packageSize}
+              onChange={(e) => setPackageSize(e.target.value)}
               placeholder="e.g. 500g, 2L"
-              style={{...fieldStyle,marginTop:5}} />
+              style={{ ...fieldStyle, marginTop: 5 }}
+            />
           </div>
         </div>
 
         {/* Note */}
-        <div style={{marginBottom:16}}>
+        <div style={{ marginBottom: 16 }}>
           <label style={labelStyle}>Note</label>
-          <input value={note} onChange={e => setNote(e.target.value)}
+          <input
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
             placeholder="Optional note..."
-            style={fieldStyle} />
+            style={fieldStyle}
+          />
         </div>
 
-        <div style={{display:"flex",gap:10,marginTop:4}}>
+        <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
           {!isNew && (
-            <button onClick={() => onDelete(item)}
-              style={{flex:1,padding:"13px",background:"#fff",color:"#e53935",
-                border:"1.5px solid #e53935",borderRadius:12,fontWeight:700,
-                fontSize:15,cursor:"pointer",fontFamily:"inherit"}}>
+            <button
+              onClick={() => onDelete(item)}
+              style={{
+                flex: 1,
+                padding: "13px",
+                background: "#fff",
+                color: "#e53935",
+                border: "1.5px solid #e53935",
+                borderRadius: 12,
+                fontWeight: 700,
+                fontSize: 15,
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
+            >
               Delete
             </button>
           )}
-          <button onClick={save} disabled={!name.trim()}
-            style={{flex:2,padding:"13px",
-              background:name.trim() ? "#1aaae0" : "#c8e8f5",
-              color:"#fff",border:"none",borderRadius:12,fontWeight:700,
-              fontSize:15,cursor:name.trim()?"pointer":"default",fontFamily:"inherit"}}>
+          <button
+            onClick={save}
+            disabled={!name.trim()}
+            style={{
+              flex: 2,
+              padding: "13px",
+              background: name.trim() ? "#1aaae0" : "#c8e8f5",
+              color: "#fff",
+              border: "none",
+              borderRadius: 12,
+              fontWeight: 700,
+              fontSize: 15,
+              cursor: name.trim() ? "pointer" : "default",
+              fontFamily: "inherit",
+            }}
+          >
             {isNew ? "Add to List" : "Save Changes"}
           </button>
         </div>
@@ -414,7 +1143,16 @@ function ItemModal({ item, onSave, onDelete, onClose, user, learnedCategories = 
 }
 
 // ── Add Item Bar ──────────────────────────────────────────
-function AddItemBar({ onAdd, items, user, learnedCategories = {}, categories = DEFAULT_CATEGORIES, onUpdateCategories, categoryIcons = {}, onUpdateCategoryIcons }) {
+function AddItemBar({
+  onAdd,
+  items,
+  user,
+  learnedCategories = {},
+  categories = DEFAULT_CATEGORIES,
+  onUpdateCategories,
+  categoryIcons = {},
+  onUpdateCategoryIcons,
+}) {
   const [text, setText] = useState("");
   const [modalItem, setModalItem] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
@@ -422,83 +1160,199 @@ function AddItemBar({ onAdd, items, user, learnedCategories = {}, categories = D
   const handleChange = (val) => {
     setText(val);
     if (val.trim().length > 0) {
-      setSuggestions(items.filter(i =>
-        i.name.toLowerCase().includes(val.toLowerCase())
-      ).slice(0, 4));
+      setSuggestions(
+        items
+          .filter((i) => i.name.toLowerCase().includes(val.toLowerCase()))
+          .slice(0, 4),
+      );
     } else {
       setSuggestions([]);
     }
   };
 
   const quickAdd = (name) => {
-    onAdd({ name, category: guessCategory(name, learnedCategories), note: "", emoji: "" }, user);
-    setText(""); setSuggestions([]);
+    onAdd(
+      {
+        name,
+        category: guessCategory(name, learnedCategories),
+        note: "",
+        emoji: "",
+      },
+      user,
+    );
+    setText("");
+    setSuggestions([]);
   };
 
   return (
-    <div style={{padding:"10px 14px",background:"#fff",borderBottom:"1px solid #ececec",position:"relative"}}>
-      <div style={{display:"flex",alignItems:"center",background:"#f4f6f8",borderRadius:24,padding:"9px 16px",gap:8}}>
-        <span style={{color:"#1aaae0",fontSize:20,lineHeight:1}}>+</span>
+    <div
+      style={{
+        padding: "10px 14px",
+        background: "#fff",
+        borderBottom: "1px solid #ececec",
+        position: "relative",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          background: "#f4f6f8",
+          borderRadius: 24,
+          padding: "9px 16px",
+          gap: 8,
+        }}
+      >
+        <span style={{ color: "#1aaae0", fontSize: 20, lineHeight: 1 }}>+</span>
         <input
           value={text}
-          onChange={e => handleChange(e.target.value)}
-          onKeyDown={e => {
+          onChange={(e) => handleChange(e.target.value)}
+          onKeyDown={(e) => {
             if (e.key === "Enter" && text.trim()) {
               quickAdd(text.trim());
             }
           }}
           placeholder="Add Item"
-          style={{border:"none",background:"transparent",fontSize:15,outline:"none",
-            flex:1,fontFamily:"inherit",color:"#333"}}
+          style={{
+            border: "none",
+            background: "transparent",
+            fontSize: 15,
+            outline: "none",
+            flex: 1,
+            fontFamily: "inherit",
+            color: "#333",
+          }}
         />
         {text.trim() && (
-          <button onClick={() => setModalItem({ name: text, category: guessCategory(text, learnedCategories), note: "" })}
-            style={{background:"none",border:"none",color:"#1aaae0",fontSize:13,
-              fontWeight:700,cursor:"pointer",padding:"2px 6px",borderRadius:8,
-              whiteSpace:"nowrap"}}>
+          <button
+            onClick={() =>
+              setModalItem({
+                name: text,
+                category: guessCategory(text, learnedCategories),
+                note: "",
+              })
+            }
+            style={{
+              background: "none",
+              border: "none",
+              color: "#1aaae0",
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: "pointer",
+              padding: "2px 6px",
+              borderRadius: 8,
+              whiteSpace: "nowrap",
+            }}
+          >
             More ›
           </button>
         )}
       </div>
 
       {text.trim().length > 0 && (
-        <div style={{position:"absolute",left:14,right:14,top:"100%",background:"#fff",
-          borderRadius:12,boxShadow:"0 4px 24px rgba(0,0,0,0.12)",zIndex:100,
-          overflow:"hidden",border:"1px solid #eee"}}>
+        <div
+          style={{
+            position: "absolute",
+            left: 14,
+            right: 14,
+            top: "100%",
+            background: "#fff",
+            borderRadius: 12,
+            boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
+            zIndex: 100,
+            overflow: "hidden",
+            border: "1px solid #eee",
+          }}
+        >
           {/* "Add [typed text]" row — always first */}
-          <div onMouseDown={() => quickAdd(text.trim())}
-            style={{padding:"10px 16px",cursor:"pointer",fontSize:14,
-              borderBottom:"1px solid #f5f5f5",display:"flex",alignItems:"center",gap:10}}>
-            <span style={{color:"#1aaae0",fontSize:18,fontWeight:700,lineHeight:1}}>+</span>
-            <div style={{fontWeight:600,color:"#1aaae0"}}>
-              Add {"\u201C"}{text.trim()}{"\u201D"}
+          <div
+            onMouseDown={() => quickAdd(text.trim())}
+            style={{
+              padding: "10px 16px",
+              cursor: "pointer",
+              fontSize: 14,
+              borderBottom: "1px solid #f5f5f5",
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+            }}
+          >
+            <span
+              style={{
+                color: "#1aaae0",
+                fontSize: 18,
+                fontWeight: 700,
+                lineHeight: 1,
+              }}
+            >
+              +
+            </span>
+            <div style={{ fontWeight: 600, color: "#1aaae0" }}>
+              Add {"\u201C"}
+              {text.trim()}
+              {"\u201D"}
             </div>
           </div>
           {/* Matching suggestions with pencil/edit icons */}
-          {suggestions.map(s => (
-            <div key={s.id}
-              style={{padding:"10px 16px",fontSize:14,
-                borderBottom:"1px solid #f5f5f5",display:"flex",alignItems:"center",gap:10}}>
-              <div onMouseDown={() => quickAdd(s.name)}
-                style={{display:"flex",alignItems:"center",gap:10,flex:1,minWidth:0,cursor:"pointer"}}>
-                <span>{categoryIcons[s.category] || CAT_ICONS[s.category]}</span>
+          {suggestions.map((s) => (
+            <div
+              key={s.id}
+              style={{
+                padding: "10px 16px",
+                fontSize: 14,
+                borderBottom: "1px solid #f5f5f5",
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+              }}
+            >
+              <div
+                onMouseDown={() => quickAdd(s.name)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  flex: 1,
+                  minWidth: 0,
+                  cursor: "pointer",
+                }}
+              >
+                <span>
+                  {categoryIcons[s.category] || CAT_ICONS[s.category]}
+                </span>
                 <div>
-                  <div style={{fontWeight:600,color:"#222"}}>{s.name}</div>
-                  <div style={{fontSize:11,color:"#aaa"}}>{s.category}</div>
+                  <div style={{ fontWeight: 600, color: "#222" }}>{s.name}</div>
+                  <div style={{ fontSize: 11, color: "#aaa" }}>
+                    {s.category}
+                  </div>
                 </div>
               </div>
-              <button onMouseDown={(e) => {
+              <button
+                onMouseDown={(e) => {
                   e.stopPropagation();
                   setModalItem({
-                    name: s.name, category: s.category,
-                    note: s.note || "", quantity: s.quantity || "", packageSize: s.packageSize || ""
+                    name: s.name,
+                    category: s.category,
+                    note: s.note || "",
+                    quantity: s.quantity || "",
+                    packageSize: s.packageSize || "",
                   });
-                  setText(""); setSuggestions([]);
+                  setText("");
+                  setSuggestions([]);
                 }}
-                style={{background:"none",border:"none",cursor:"pointer",padding:"4px 6px",
-                  fontSize:16,color:"#1aaae0",flexShrink:0,lineHeight:1}}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "4px 6px",
+                  fontSize: 16,
+                  color: "#1aaae0",
+                  flexShrink: 0,
+                  lineHeight: 1,
+                }}
                 aria-label="Edit before adding"
-                title="Edit before adding">
+                title="Edit before adding"
+              >
                 ✏️
               </button>
             </div>
@@ -509,7 +1363,11 @@ function AddItemBar({ onAdd, items, user, learnedCategories = {}, categories = D
       {modalItem && (
         <ItemModal
           item={modalItem}
-          onSave={(newItem, u) => { onAdd(newItem, u); setText(""); setModalItem(null); }}
+          onSave={(newItem, u) => {
+            onAdd(newItem, u);
+            setText("");
+            setModalItem(null);
+          }}
           onClose={() => setModalItem(null)}
           user={user}
           categories={categories}
@@ -527,33 +1385,95 @@ function AddItemBar({ onAdd, items, user, learnedCategories = {}, categories = D
 function ItemRow({ item, onToggle, onEdit, toastId }) {
   const justChecked = item.id === toastId;
   return (
-    <div onClick={() => onToggle(item.id, item.checked)}
-      style={{display:"flex",alignItems:"center",padding:"0 16px",
-        borderBottom:"1px solid #f2f2f2",background:"#fff",minHeight:52,cursor:"pointer"}}>
-      <div style={{width:26,height:26,borderRadius:"50%",
-          border:item.checked?"none":"2px solid #d0d0d0",
-          background:item.checked?"#1aaae0":"transparent",
-          display:"flex",alignItems:"center",justifyContent:"center",
-          flexShrink:0,transition:"all 0.18s"}}>
-        {item.checked && <span style={{color:"#fff",fontSize:13,fontWeight:800}}>✓</span>}
+    <div
+      onClick={() => onToggle(item.id, item.checked)}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        padding: "0 16px",
+        borderBottom: "1px solid #f2f2f2",
+        background: "#fff",
+        minHeight: 52,
+        cursor: "pointer",
+      }}
+    >
+      <div
+        style={{
+          width: 26,
+          height: 26,
+          borderRadius: "50%",
+          border: item.checked ? "none" : "2px solid #d0d0d0",
+          background: item.checked ? "#1aaae0" : "transparent",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+          transition: "all 0.18s",
+        }}
+      >
+        {item.checked && (
+          <span style={{ color: "#fff", fontSize: 13, fontWeight: 800 }}>
+            ✓
+          </span>
+        )}
       </div>
-      <div style={{flex:1,marginLeft:14}}>
-        <span style={{fontSize:15.5,letterSpacing:0.1,
-          color: justChecked ? "#e53935" : item.checked ? "#b0b0b0" : "#1a1a2e",
-          textDecoration: item.checked ? "line-through" : "none",
-          textDecorationColor: justChecked ? "#e53935" : undefined}}>
+      <div style={{ flex: 1, marginLeft: 14 }}>
+        <span
+          style={{
+            fontSize: 15.5,
+            letterSpacing: 0.1,
+            color: justChecked
+              ? "#e53935"
+              : item.checked
+                ? "#b0b0b0"
+                : "#1a1a2e",
+            textDecoration: item.checked ? "line-through" : "none",
+            textDecorationColor: justChecked ? "#e53935" : undefined,
+          }}
+        >
           {item.name}
-          {item.emoji && <span style={{marginLeft:6}}>{item.emoji}</span>}
-          {item.quantity && <span style={{marginLeft:6,fontSize:13,color:item.checked?"#c0c0c0":"#1aaae0",fontWeight:600}}>×{item.quantity}</span>}
+          {item.emoji && <span style={{ marginLeft: 6 }}>{item.emoji}</span>}
+          {item.quantity && (
+            <span
+              style={{
+                marginLeft: 6,
+                fontSize: 13,
+                color: item.checked ? "#c0c0c0" : "#1aaae0",
+                fontWeight: 600,
+              }}
+            >
+              ×{item.quantity}
+            </span>
+          )}
         </span>
-        <div style={{display:"flex",gap:8,marginTop:1,flexWrap:"wrap"}}>
-          {item.packageSize && <span style={{fontSize:11,color:"#aaa"}}>{item.packageSize}</span>}
-          {item.note && <span style={{fontSize:11,color:"#999"}}>{item.note}</span>}
+        <div
+          style={{ display: "flex", gap: 8, marginTop: 1, flexWrap: "wrap" }}
+        >
+          {item.packageSize && (
+            <span style={{ fontSize: 11, color: "#aaa" }}>
+              {item.packageSize}
+            </span>
+          )}
+          {item.note && (
+            <span style={{ fontSize: 11, color: "#999" }}>{item.note}</span>
+          )}
         </div>
       </div>
-      <button onClick={e => { e.stopPropagation(); onEdit(item); }}
-        style={{background:"none",border:"none",cursor:"pointer",
-          color:"#1aaae0",fontSize:16,padding:"8px 4px 8px 12px",opacity:0.65}}>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onEdit(item);
+        }}
+        style={{
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          color: "#1aaae0",
+          fontSize: 16,
+          padding: "8px 4px 8px 12px",
+          opacity: 0.65,
+        }}
+      >
         ✏️
       </button>
     </div>
@@ -561,57 +1481,111 @@ function ItemRow({ item, onToggle, onEdit, toastId }) {
 }
 
 // ── Category Section ──────────────────────────────────────
-function CategorySection({ category, items, onToggle, onEdit, toastId, categoryIcons = {} }) {
+function CategorySection({
+  category,
+  items,
+  onToggle,
+  onEdit,
+  toastId,
+  categoryIcons = {},
+}) {
   const [collapsed, setCollapsed] = useState(false);
-  const unchecked = items.filter(i => !i.checked);
-  const checked = items.filter(i => i.checked);
+  const unchecked = items.filter((i) => !i.checked);
+  const checked = items.filter((i) => i.checked);
 
   return (
     <div>
-      <div onClick={() => setCollapsed(c => !c)}
-        style={{display:"flex",alignItems:"center",padding:"8px 16px",
-          background:"#f0f4f7",cursor:"pointer",borderBottom:"1px solid #e4eaee"}}>
-        <span style={{fontSize:15,marginRight:8}}>{categoryIcons[category] || CAT_ICONS[category] || "📦"}</span>
-        <span style={{color:"#1aaae0",fontWeight:700,fontSize:14,letterSpacing:0.3}}>{category}</span>
-        <span style={{marginLeft:"auto",color:"#b0b0b0",fontSize:12}}>
-          {unchecked.length > 0 && <span style={{marginRight:4}}>{unchecked.length}</span>}
+      <div
+        onClick={() => setCollapsed((c) => !c)}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          padding: "8px 16px",
+          background: "#f0f4f7",
+          cursor: "pointer",
+          borderBottom: "1px solid #e4eaee",
+        }}
+      >
+        <span style={{ fontSize: 15, marginRight: 8 }}>
+          {categoryIcons[category] || CAT_ICONS[category] || "📦"}
+        </span>
+        <span
+          style={{
+            color: "#1aaae0",
+            fontWeight: 700,
+            fontSize: 14,
+            letterSpacing: 0.3,
+          }}
+        >
+          {category}
+        </span>
+        <span style={{ marginLeft: "auto", color: "#b0b0b0", fontSize: 12 }}>
+          {unchecked.length > 0 && (
+            <span style={{ marginRight: 4 }}>{unchecked.length}</span>
+          )}
           {collapsed ? "▸" : "▾"}
         </span>
       </div>
-      {!collapsed && [...unchecked, ...checked].map(item => (
-        <ItemRow key={item.id} item={item} onToggle={onToggle} onEdit={onEdit} toastId={toastId} />
-      ))}
+      {!collapsed &&
+        [...unchecked, ...checked].map((item) => (
+          <ItemRow
+            key={item.id}
+            item={item}
+            onToggle={onToggle}
+            onEdit={onEdit}
+            toastId={toastId}
+          />
+        ))}
     </div>
   );
 }
 
 // ── History Panel ─────────────────────────────────────────
-function HistoryPanel({ onClose, onReAdd, fetchHistory, clearHistory, categoryIcons = {} }) {
+function HistoryPanel({
+  onClose,
+  onReAdd,
+  fetchHistory,
+  clearHistory,
+  categoryIcons = {},
+}) {
   const [historyItems, setHistoryItems] = useState(null);
   const [clearing, setClearing] = useState(false);
 
   useEffect(() => {
-    fetchHistory().then(setHistoryItems).catch(() => setHistoryItems([]));
+    fetchHistory()
+      .then(setHistoryItems)
+      .catch(() => setHistoryItems([]));
   }, []); // eslint-disable-line
 
   const groups = useMemo(() => {
     if (!historyItems) return null;
     const now = new Date();
-    const today     = new Date(now); today.setHours(0,0,0,0);
-    const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
     const map = {};
     const order = [];
     for (const item of historyItems) {
       const d = item.checkedAt?.toDate?.() || new Date();
-      const day = new Date(d); day.setHours(0,0,0,0);
+      const day = new Date(d);
+      day.setHours(0, 0, 0, 0);
       let label;
-      if (day >= today)     label = "Today";
+      if (day >= today) label = "Today";
       else if (day >= yesterday) label = "Yesterday";
-      else label = d.toLocaleDateString("en-AU", { weekday:"long", day:"numeric", month:"short" });
-      if (!map[label]) { map[label] = []; order.push(label); }
+      else
+        label = d.toLocaleDateString("en-AU", {
+          weekday: "long",
+          day: "numeric",
+          month: "short",
+        });
+      if (!map[label]) {
+        map[label] = [];
+        order.push(label);
+      }
       map[label].push(item);
     }
-    return order.map(label => ({ label, items: map[label] }));
+    return order.map((label) => ({ label, items: map[label] }));
   }, [historyItems]);
 
   const handleClearAll = async () => {
@@ -623,65 +1597,192 @@ function HistoryPanel({ onClose, onReAdd, fetchHistory, clearHistory, categoryIc
 
   return (
     <>
-      <div onClick={onClose}
-        style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",zIndex:1000}} />
-      <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",
-        width:"100%",maxWidth:480,background:"#fff",borderRadius:"20px 20px 0 0",
-        zIndex:1001,maxHeight:"78vh",display:"flex",flexDirection:"column"}}>
-
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",
-          padding:"18px 20px 14px",borderBottom:"1px solid #f0f0f0",flexShrink:0}}>
-          <span style={{fontSize:17,fontWeight:700,color:"#1a1a2e"}}>Recently Checked Off</span>
-          <button onClick={onClose}
-            style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"#aaa"}}>✕</button>
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0,0,0,0.45)",
+          zIndex: 1000,
+        }}
+      />
+      <div
+        style={{
+          position: "fixed",
+          bottom: 0,
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: "100%",
+          maxWidth: 480,
+          background: "#fff",
+          borderRadius: "20px 20px 0 0",
+          zIndex: 1001,
+          maxHeight: "78vh",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "18px 20px 14px",
+            borderBottom: "1px solid #f0f0f0",
+            flexShrink: 0,
+          }}
+        >
+          <span style={{ fontSize: 17, fontWeight: 700, color: "#1a1a2e" }}>
+            Recently Checked Off
+          </span>
+          <button
+            onClick={onClose}
+            style={{
+              background: "none",
+              border: "none",
+              fontSize: 22,
+              cursor: "pointer",
+              color: "#aaa",
+            }}
+          >
+            ✕
+          </button>
         </div>
 
-        <div style={{flex:1,overflowY:"auto"}}>
+        <div style={{ flex: 1, overflowY: "auto" }}>
           {!historyItems ? (
-            <div style={{textAlign:"center",padding:40,color:"#aaa",fontSize:14}}>Loading…</div>
+            <div
+              style={{
+                textAlign: "center",
+                padding: 40,
+                color: "#aaa",
+                fontSize: 14,
+              }}
+            >
+              Loading…
+            </div>
           ) : historyItems.length === 0 ? (
-            <div style={{textAlign:"center",padding:"50px 24px",color:"#bbb",fontSize:14,lineHeight:1.6}}>
+            <div
+              style={{
+                textAlign: "center",
+                padding: "50px 24px",
+                color: "#bbb",
+                fontSize: 14,
+                lineHeight: 1.6,
+              }}
+            >
               No checked-off items in the last 30 days.
             </div>
-          ) : groups?.map(({ label, items: groupItems }) => (
-            <div key={label}>
-              <div style={{fontSize:11,fontWeight:700,color:"#bbb",textTransform:"uppercase",
-                letterSpacing:0.8,padding:"12px 20px 6px"}}>{label}</div>
-              {groupItems.map(item => (
-                <div key={item.id}
-                  style={{display:"flex",alignItems:"center",padding:"10px 16px",
-                    borderBottom:"1px solid #f5f5f5"}}>
-                  <span style={{fontSize:20,width:30,textAlign:"center",flexShrink:0}}>
-                    {categoryIcons[item.category] || CAT_ICONS[item.category] || "🏷️"}
-                  </span>
-                  <div style={{flex:1,marginLeft:12,minWidth:0}}>
-                    <div style={{fontSize:15,color:"#1a1a2e",fontWeight:500}}>{item.name}</div>
-                    {(item.quantity || item.note || item.packageSize) && (
-                      <div style={{fontSize:11,color:"#aaa",marginTop:1}}>
-                        {[item.quantity && `×${item.quantity}`, item.packageSize, item.note]
-                          .filter(Boolean).join(" · ")}
-                      </div>
-                    )}
-                  </div>
-                  <button onClick={() => onReAdd(item)}
-                    style={{background:"#e8f6fd",color:"#1aaae0",border:"none",
-                      borderRadius:8,padding:"6px 12px",fontWeight:700,fontSize:13,
-                      cursor:"pointer",flexShrink:0,fontFamily:"inherit"}}>
-                    + Re-add
-                  </button>
+          ) : (
+            groups?.map(({ label, items: groupItems }) => (
+              <div key={label}>
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "#bbb",
+                    textTransform: "uppercase",
+                    letterSpacing: 0.8,
+                    padding: "12px 20px 6px",
+                  }}
+                >
+                  {label}
                 </div>
-              ))}
-            </div>
-          ))}
-          <div style={{height:16}} />
+                {groupItems.map((item) => (
+                  <div
+                    key={item.id}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "10px 16px",
+                      borderBottom: "1px solid #f5f5f5",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 20,
+                        width: 30,
+                        textAlign: "center",
+                        flexShrink: 0,
+                      }}
+                    >
+                      {categoryIcons[item.category] ||
+                        CAT_ICONS[item.category] ||
+                        "🏷️"}
+                    </span>
+                    <div style={{ flex: 1, marginLeft: 12, minWidth: 0 }}>
+                      <div
+                        style={{
+                          fontSize: 15,
+                          color: "#1a1a2e",
+                          fontWeight: 500,
+                        }}
+                      >
+                        {item.name}
+                      </div>
+                      {(item.quantity || item.note || item.packageSize) && (
+                        <div
+                          style={{ fontSize: 11, color: "#aaa", marginTop: 1 }}
+                        >
+                          {[
+                            item.quantity && `×${item.quantity}`,
+                            item.packageSize,
+                            item.note,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => onReAdd(item)}
+                      style={{
+                        background: "#e8f6fd",
+                        color: "#1aaae0",
+                        border: "none",
+                        borderRadius: 8,
+                        padding: "6px 12px",
+                        fontWeight: 700,
+                        fontSize: 13,
+                        cursor: "pointer",
+                        flexShrink: 0,
+                        fontFamily: "inherit",
+                      }}
+                    >
+                      + Re-add
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ))
+          )}
+          <div style={{ height: 16 }} />
         </div>
 
         {historyItems?.length > 0 && (
-          <div style={{padding:"12px 20px 28px",borderTop:"1px solid #f0f0f0",flexShrink:0}}>
-            <button onClick={handleClearAll} disabled={clearing}
-              style={{width:"100%",padding:"12px",background:"#fff5f5",color:"#e53935",
-                border:"none",borderRadius:10,fontWeight:700,fontSize:14,
-                cursor:clearing?"default":"pointer",fontFamily:"inherit"}}>
+          <div
+            style={{
+              padding: "12px 20px 28px",
+              borderTop: "1px solid #f0f0f0",
+              flexShrink: 0,
+            }}
+          >
+            <button
+              onClick={handleClearAll}
+              disabled={clearing}
+              style={{
+                width: "100%",
+                padding: "12px",
+                background: "#fff5f5",
+                color: "#e53935",
+                border: "none",
+                borderRadius: 10,
+                fontWeight: 700,
+                fontSize: 14,
+                cursor: clearing ? "default" : "pointer",
+                fontFamily: "inherit",
+              }}
+            >
               {clearing ? "Clearing…" : "Clear all history"}
             </button>
           </div>
@@ -692,19 +1793,38 @@ function HistoryPanel({ onClose, onReAdd, fetchHistory, clearHistory, categoryIc
 }
 
 // ── Main Page ─────────────────────────────────────────────
-export default function GroceryListPage({ user, onLogOut, onNavigate, activePage = "lists",
-    activeListId, onListChange }) {
+export default function GroceryListPage({
+  user,
+  onLogOut,
+  onNavigate,
+  activePage = "lists",
+  activeListId,
+  onListChange,
+}) {
   const { lists, createList, renameList, deleteList } = useLists();
   const setActiveListId = onListChange;
   const [showAddList, setShowAddList] = useState(false);
   const [editingList, setEditingList] = useState(null);
 
-  const activeList = lists.find(l => l.id === activeListId) || null;
+  const activeList = lists.find((l) => l.id === activeListId) || null;
 
-  const { items, loading, addItem, updateItem, toggleCheck, deleteItem, clearChecked,
-          fetchHistory, clearHistory, persistedLearned, persistCategory,
-          customCategories, updateCategories,
-          customCategoryIcons, updateCategoryIcons } = useGroceryList(activeListId);
+  const {
+    items,
+    loading,
+    addItem,
+    updateItem,
+    toggleCheck,
+    deleteItem,
+    clearChecked,
+    fetchHistory,
+    clearHistory,
+    persistedLearned,
+    persistCategory,
+    customCategories,
+    updateCategories,
+    customCategoryIcons,
+    updateCategoryIcons,
+  } = useGroceryList(activeListId);
   const [editingItem, setEditingItem] = useState(null);
   const [showChecked, setShowChecked] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -722,7 +1842,7 @@ export default function GroceryListPage({ user, onLogOut, onNavigate, activePage
   const handleToggle = (id, currentChecked) => {
     toggleCheck(id, currentChecked);
     if (!currentChecked) {
-      const item = items.find(i => i.id === id);
+      const item = items.find((i) => i.id === id);
       if (toastTimer.current) clearTimeout(toastTimer.current);
       setToast({ id, name: item?.name || "", emoji: item?.emoji || "" });
       toastTimer.current = setTimeout(() => setToast(null), 4000);
@@ -743,43 +1863,67 @@ export default function GroceryListPage({ user, onLogOut, onNavigate, activePage
   // Fire a browser notification when another user adds items (app open in background tab).
   useEffect(() => {
     if (loading) return;
-    if (prevItemsRef.current === null) { prevItemsRef.current = items; return; }
-    const prevIds = new Set(prevItemsRef.current.map(i => i.id));
-    const addedByOther = items.filter(i => !prevIds.has(i.id) && i.addedByUid !== user?.uid);
+    if (prevItemsRef.current === null) {
+      prevItemsRef.current = items;
+      return;
+    }
+    const prevIds = new Set(prevItemsRef.current.map((i) => i.id));
+    const addedByOther = items.filter(
+      (i) => !prevIds.has(i.id) && i.addedByUid !== user?.uid,
+    );
     if (addedByOther.length && Notification.permission === "granted") {
-      const by    = addedByOther[0].addedBy;
-      const names = addedByOther.map(i => i.name).join(", ");
-      const payload = { body: `${by} added: ${names}`, icon: "/anylist/icon-192.png", tag: "foodlist-add" };
+      const by = addedByOther[0].addedBy;
+      const names = addedByOther.map((i) => i.name).join(", ");
+      const payload = {
+        body: `${by} added: ${names}`,
+        icon: "/anylist/icon-192.png",
+        tag: "foodlist-add",
+      };
       try {
         // Chrome on Android forbids new Notification() — must use ServiceWorker
         navigator.serviceWorker?.ready
-          .then(reg => reg.showNotification("FoodList", payload))
+          .then((reg) => reg.showNotification("FoodList", payload))
           .catch(() => {});
-      } catch (e) { /* notifications not supported */ }
+      } catch (e) {
+        /* notifications not supported */
+      }
     }
     prevItemsRef.current = items;
   }, [items, loading]); // eslint-disable-line
 
-  const learnedCategories = useMemo(() => ({
-    ...persistedLearned,
-    ...Object.fromEntries(items.map(i => [i.name.toLowerCase(), i.category]))
-  }), [items, persistedLearned]);
+  const learnedCategories = useMemo(
+    () => ({
+      ...persistedLearned,
+      ...Object.fromEntries(
+        items.map((i) => [i.name.toLowerCase(), i.category]),
+      ),
+    }),
+    [items, persistedLearned],
+  );
 
   const effectiveCategories = customCategories || DEFAULT_CATEGORIES;
 
-  const displayItems = showChecked ? items : items.filter(i => !i.checked || i.id === toast?.id);
-  const remaining = items.filter(i => !i.checked).length;
-  const checkedCount = items.filter(i => i.checked).length;
+  const displayItems = showChecked
+    ? items
+    : items.filter((i) => !i.checked || i.id === toast?.id);
+  const remaining = items.filter((i) => !i.checked).length;
+  const checkedCount = items.filter((i) => i.checked).length;
 
   const grouped = effectiveCategories.reduce((acc, cat) => {
-    const catItems = displayItems.filter(i => i.category === cat);
+    const catItems = displayItems.filter((i) => i.category === cat);
     if (catItems.length > 0) acc[cat] = catItems;
     return acc;
   }, {});
 
   const handleSave = async (item, u) => {
     if (item.id) {
-      await updateItem(item.id, { name: item.name, category: item.category, note: item.note, quantity: item.quantity || "", packageSize: item.packageSize || "" });
+      await updateItem(item.id, {
+        name: item.name,
+        category: item.category,
+        note: item.note,
+        quantity: item.quantity || "",
+        packageSize: item.packageSize || "",
+      });
     } else {
       await addItem(item, u);
     }
@@ -788,65 +1932,200 @@ export default function GroceryListPage({ user, onLogOut, onNavigate, activePage
   };
 
   return (
-    <div style={{width:"100%",margin:"0 auto",minHeight:"100vh",background:"#f0f2f5",
-      fontFamily:"'Helvetica Neue',Arial,sans-serif",display:"flex",flexDirection:"column",
-      boxShadow:"0 0 40px rgba(0,0,0,0.08)"}}>
-
+    <div
+      style={{
+        width: "100%",
+        margin: "0 auto",
+        minHeight: "100vh",
+        background: "#f0f2f5",
+        fontFamily: "'Helvetica Neue',Arial,sans-serif",
+        display: "flex",
+        flexDirection: "column",
+        boxShadow: "0 0 40px rgba(0,0,0,0.08)",
+      }}
+    >
       {/* Header */}
-      <div style={{background:"linear-gradient(135deg,#1aaae0 0%,#0e8ab8 100%)",
-        padding:"16px 16px 0",color:"#fff"}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",paddingBottom:12}}>
-          <div style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer"}}
-            onClick={() => setShowUserMenu(u => !u)}>
-            {user.photoURL
-              ? <img src={user.photoURL} alt="" style={{width:36,height:36,borderRadius:"50%",border:"2px solid rgba(255,255,255,0.6)"}} />
-              : <div style={{width:36,height:36,borderRadius:"50%",background:"rgba(255,255,255,0.3)",
-                  display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:700}}>
-                  {(user.displayName||user.email||"?")[0].toUpperCase()}
-                </div>
-            }
-            <div>
-              <div style={{fontSize:17,fontWeight:700,letterSpacing:0.2}}>
-                {activeList ? `${activeList.emoji} ${activeList.name}` : "Loading…"}
+      <div
+        style={{
+          background: "linear-gradient(135deg,#1aaae0 0%,#0e8ab8 100%)",
+          padding: "16px 16px 0",
+          color: "#fff",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingBottom: 12,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              cursor: "pointer",
+            }}
+            onClick={() => setShowUserMenu((u) => !u)}
+          >
+            {user.photoURL ? (
+              <img
+                src={user.photoURL}
+                alt=""
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: "50%",
+                  border: "2px solid rgba(255,255,255,0.6)",
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: "50%",
+                  background: "rgba(255,255,255,0.3)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 16,
+                  fontWeight: 700,
+                }}
+              >
+                {(user.displayName || user.email || "?")[0].toUpperCase()}
               </div>
-              <div style={{fontSize:12,opacity:0.85,marginTop:1}}>
-                {loading ? "Loading..." : `${remaining} of ${items.length} items remaining`}
+            )}
+            <div>
+              <div
+                style={{ fontSize: 17, fontWeight: 700, letterSpacing: 0.2 }}
+              >
+                {activeList
+                  ? `${activeList.emoji} ${activeList.name}`
+                  : "Loading…"}
+              </div>
+              <div style={{ fontSize: 12, opacity: 0.85, marginTop: 1 }}>
+                {loading
+                  ? "Loading..."
+                  : `${remaining} of ${items.length} items remaining`}
               </div>
             </div>
           </div>
-          <div style={{display:"flex",gap:0}}>
-            <button onClick={() => setShowHistory(true)}
-              style={{background:"none",border:"none",color:"#fff",fontSize:19,cursor:"pointer",padding:"4px 8px",opacity:0.9}}
-              title="Recently cleared">🕐</button>
-            <button onClick={() => setShowDotMenu(m => !m)}
-              style={{background:"none",border:"none",color:"#fff",fontSize:22,cursor:"pointer",padding:"4px 8px"}}>⋮</button>
+          <div style={{ display: "flex", gap: 0 }}>
+            <button
+              onClick={() => setShowHistory(true)}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#fff",
+                fontSize: 19,
+                cursor: "pointer",
+                padding: "4px 8px",
+                opacity: 0.9,
+              }}
+              title="Recently cleared"
+            >
+              🕐
+            </button>
+            <button
+              onClick={() => setShowDotMenu((m) => !m)}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#fff",
+                fontSize: 22,
+                cursor: "pointer",
+                padding: "4px 8px",
+              }}
+            >
+              ⋮
+            </button>
           </div>
         </div>
 
         {showDotMenu && (
-          <div style={{marginTop:12,background:"rgba(0,0,0,0.15)",borderRadius:12,padding:"8px 4px"}}>
-            <button onClick={() => { setShowChecked(s => !s); setShowDotMenu(false); }}
-              style={{width:"100%",background:"none",border:"none",color:"#fff",fontSize:14,
-                fontWeight:600,cursor:"pointer",padding:"10px 14px",textAlign:"left",borderRadius:8,
-                display:"flex",alignItems:"center",gap:10}}>
-              <span style={{fontSize:18}}>{showChecked ? "🙈" : "👁"}</span>
+          <div
+            style={{
+              marginTop: 12,
+              background: "rgba(0,0,0,0.15)",
+              borderRadius: 12,
+              padding: "8px 4px",
+            }}
+          >
+            <button
+              onClick={() => {
+                setShowChecked((s) => !s);
+                setShowDotMenu(false);
+              }}
+              style={{
+                width: "100%",
+                background: "none",
+                border: "none",
+                color: "#fff",
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: "pointer",
+                padding: "10px 14px",
+                textAlign: "left",
+                borderRadius: 8,
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+              }}
+            >
+              <span style={{ fontSize: 18 }}>{showChecked ? "🙈" : "👁"}</span>
               {showChecked ? "Hide checked items" : "Show checked items"}
             </button>
             {checkedCount > 0 && (
-              <button onClick={() => { clearChecked(user); setShowDotMenu(false); }}
-                style={{width:"100%",background:"none",border:"none",color:"#ffaaaa",fontSize:14,
-                  fontWeight:600,cursor:"pointer",padding:"10px 14px",textAlign:"left",borderRadius:8,
-                  display:"flex",alignItems:"center",gap:10}}>
-                <span style={{fontSize:18}}>🗑️</span>
+              <button
+                onClick={() => {
+                  clearChecked(user);
+                  setShowDotMenu(false);
+                }}
+                style={{
+                  width: "100%",
+                  background: "none",
+                  border: "none",
+                  color: "#ffaaaa",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  padding: "10px 14px",
+                  textAlign: "left",
+                  borderRadius: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                }}
+              >
+                <span style={{ fontSize: 18 }}>🗑️</span>
                 Clear {checkedCount} checked item{checkedCount !== 1 ? "s" : ""}
               </button>
             )}
             {activeList && (
-              <button onClick={() => { setEditingList(activeList); setShowDotMenu(false); }}
-                style={{width:"100%",background:"none",border:"none",color:"#fff",fontSize:14,
-                  fontWeight:600,cursor:"pointer",padding:"10px 14px",textAlign:"left",borderRadius:8,
-                  display:"flex",alignItems:"center",gap:10}}>
-                <span style={{fontSize:18}}>✏️</span>
+              <button
+                onClick={() => {
+                  setEditingList(activeList);
+                  setShowDotMenu(false);
+                }}
+                style={{
+                  width: "100%",
+                  background: "none",
+                  border: "none",
+                  color: "#fff",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  padding: "10px 14px",
+                  textAlign: "left",
+                  borderRadius: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                }}
+              >
+                <span style={{ fontSize: 18 }}>✏️</span>
                 Rename / manage list
               </button>
             )}
@@ -854,17 +2133,34 @@ export default function GroceryListPage({ user, onLogOut, onNavigate, activePage
         )}
 
         {showUserMenu && (
-          <div style={{marginTop:12,background:"rgba(0,0,0,0.15)",borderRadius:12,padding:"10px 14px"}}>
-            <div style={{fontSize:13,opacity:0.9,marginBottom:8}}>
+          <div
+            style={{
+              marginTop: 12,
+              background: "rgba(0,0,0,0.15)",
+              borderRadius: 12,
+              padding: "10px 14px",
+            }}
+          >
+            <div style={{ fontSize: 13, opacity: 0.9, marginBottom: 8 }}>
               Signed in as <strong>{user.displayName || user.email}</strong>
             </div>
-            <div style={{fontSize:12,opacity:0.75,marginBottom:10}}>
-              💡 Your wife signs in with her Google account on her phone — you'll both see the same list in real time.
+            <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 10 }}>
+              💡 Your wife signs in with her Google account on her phone —
+              you'll both see the same list in real time.
             </div>
-            <button onClick={onLogOut}
-              style={{background:"rgba(255,255,255,0.2)",border:"1px solid rgba(255,255,255,0.4)",
-                color:"#fff",borderRadius:8,padding:"6px 14px",cursor:"pointer",
-                fontSize:13,fontWeight:600}}>
+            <button
+              onClick={onLogOut}
+              style={{
+                background: "rgba(255,255,255,0.2)",
+                border: "1px solid rgba(255,255,255,0.4)",
+                color: "#fff",
+                borderRadius: 8,
+                padding: "6px 14px",
+                cursor: "pointer",
+                fontSize: 13,
+                fontWeight: 600,
+              }}
+            >
               Sign Out
             </button>
           </div>
@@ -875,66 +2171,126 @@ export default function GroceryListPage({ user, onLogOut, onNavigate, activePage
           <ListTabBar
             lists={lists}
             activeId={activeListId}
-            onSelect={id => { setActiveListId(id); setShowDotMenu(false); setShowUserMenu(false); }}
+            onSelect={(id) => {
+              setActiveListId(id);
+              setShowDotMenu(false);
+              setShowUserMenu(false);
+            }}
             onCreate={() => setShowAddList(true)}
-            onEdit={list => setEditingList(list)}
+            onEdit={(list) => setEditingList(list)}
           />
         )}
       </div>
 
       {/* Add Bar */}
-      <AddItemBar onAdd={addItem} items={items} user={user} learnedCategories={learnedCategories}
-        categories={effectiveCategories} onUpdateCategories={updateCategories}
-        categoryIcons={customCategoryIcons} onUpdateCategoryIcons={updateCategoryIcons} />
+      <AddItemBar
+        onAdd={addItem}
+        items={items}
+        user={user}
+        learnedCategories={learnedCategories}
+        categories={effectiveCategories}
+        onUpdateCategories={updateCategories}
+        categoryIcons={customCategoryIcons}
+        onUpdateCategoryIcons={updateCategoryIcons}
+      />
 
       {/* Notification permission banner */}
       {notifBanner && (
-        <div style={{background:"#fffbe6",borderBottom:"1px solid #ffe58f",padding:"10px 14px",
-          display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
-          <span style={{fontSize:18}}>🔔</span>
-          <span style={{flex:1,fontSize:13,color:"#555",lineHeight:1.4}}>
+        <div
+          style={{
+            background: "#fffbe6",
+            borderBottom: "1px solid #ffe58f",
+            padding: "10px 14px",
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            flexWrap: "wrap",
+          }}
+        >
+          <span style={{ fontSize: 18 }}>🔔</span>
+          <span
+            style={{ flex: 1, fontSize: 13, color: "#555", lineHeight: 1.4 }}
+          >
             Get notified when your partner adds items
           </span>
           <button
             onClick={async () => {
               const perm = await Notification.requestPermission();
-              localStorage.setItem("notifPermAsked", perm === "granted" ? "granted" : "dismissed");
+              localStorage.setItem(
+                "notifPermAsked",
+                perm === "granted" ? "granted" : "dismissed",
+              );
               setNotifBanner(false);
             }}
-            style={{background:"#1aaae0",color:"#fff",border:"none",borderRadius:8,
-              padding:"6px 14px",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>
+            style={{
+              background: "#1aaae0",
+              color: "#fff",
+              border: "none",
+              borderRadius: 8,
+              padding: "6px 14px",
+              fontWeight: 700,
+              fontSize: 13,
+              cursor: "pointer",
+              fontFamily: "inherit",
+            }}
+          >
             Enable
           </button>
           <button
-            onClick={() => { localStorage.setItem("notifPermAsked","dismissed"); setNotifBanner(false); }}
-            style={{background:"none",border:"none",color:"#aaa",fontSize:13,cursor:"pointer",
-              padding:"6px 4px",fontFamily:"inherit"}}>
+            onClick={() => {
+              localStorage.setItem("notifPermAsked", "dismissed");
+              setNotifBanner(false);
+            }}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#aaa",
+              fontSize: 13,
+              cursor: "pointer",
+              padding: "6px 4px",
+              fontFamily: "inherit",
+            }}
+          >
             Not now
           </button>
         </div>
       )}
 
       {/* List */}
-      <div style={{flex:1,overflowY:"auto"}}>
+      <div style={{ flex: 1, overflowY: "auto" }}>
         {loading ? (
-          <div style={{textAlign:"center",padding:"60px 20px",color:"#aaa"}}>
-            <div style={{fontSize:32,marginBottom:12}}>⏳</div>
-            <div style={{fontSize:15}}>Loading your list...</div>
+          <div
+            style={{ textAlign: "center", padding: "60px 20px", color: "#aaa" }}
+          >
+            <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
+            <div style={{ fontSize: 15 }}>Loading your list...</div>
           </div>
         ) : Object.keys(grouped).length === 0 ? (
-          <div style={{textAlign:"center",padding:"60px 20px",color:"#aaa"}}>
-            <div style={{fontSize:48,marginBottom:12}}>🛒</div>
-            <div style={{fontSize:18,fontWeight:600,color:"#ccc"}}>Your list is empty</div>
-            <div style={{fontSize:14,marginTop:6}}>Tap + Add Item above to get started</div>
+          <div
+            style={{ textAlign: "center", padding: "60px 20px", color: "#aaa" }}
+          >
+            <div style={{ fontSize: 48, marginBottom: 12 }}>🛒</div>
+            <div style={{ fontSize: 18, fontWeight: 600, color: "#ccc" }}>
+              Your list is empty
+            </div>
+            <div style={{ fontSize: 14, marginTop: 6 }}>
+              Tap + Add Item above to get started
+            </div>
           </div>
         ) : (
           Object.entries(grouped).map(([cat, catItems]) => (
-            <CategorySection key={cat} category={cat} items={catItems}
-              onToggle={handleToggle} onEdit={setEditingItem} toastId={toast?.id}
-              categoryIcons={customCategoryIcons} />
+            <CategorySection
+              key={cat}
+              category={cat}
+              items={catItems}
+              onToggle={handleToggle}
+              onEdit={setEditingItem}
+              toastId={toast?.id}
+              categoryIcons={customCategoryIcons}
+            />
           ))
         )}
-        <div style={{height:90}} />
+        <div style={{ height: 90 }} />
       </div>
 
       {/* History Panel */}
@@ -942,8 +2298,17 @@ export default function GroceryListPage({ user, onLogOut, onNavigate, activePage
         <HistoryPanel
           onClose={() => setShowHistory(false)}
           onReAdd={async (item) => {
-            await addItem({ name: item.name, category: item.category, note: item.note || "",
-              quantity: item.quantity || "", packageSize: item.packageSize || "", emoji: item.emoji || "" }, user);
+            await addItem(
+              {
+                name: item.name,
+                category: item.category,
+                note: item.note || "",
+                quantity: item.quantity || "",
+                packageSize: item.packageSize || "",
+                emoji: item.emoji || "",
+              },
+              user,
+            );
             setShowHistory(false);
           }}
           fetchHistory={fetchHistory}
@@ -954,26 +2319,62 @@ export default function GroceryListPage({ user, onLogOut, onNavigate, activePage
 
       {/* Edit Modal */}
       {editingItem && (
-        <ItemModal item={editingItem} onSave={handleSave} learnedCategories={learnedCategories}
-          categories={effectiveCategories} onUpdateCategories={updateCategories}
-          categoryIcons={customCategoryIcons} onUpdateCategoryIcons={updateCategoryIcons}
+        <ItemModal
+          item={editingItem}
+          onSave={handleSave}
+          learnedCategories={learnedCategories}
+          categories={effectiveCategories}
+          onUpdateCategories={updateCategories}
+          categoryIcons={customCategoryIcons}
+          onUpdateCategoryIcons={updateCategoryIcons}
           items={items}
-          onDelete={async (item) => { await deleteItem(item, user); setEditingItem(null); }}
-          onClose={() => setEditingItem(null)} user={user} />
+          onDelete={async (item) => {
+            await deleteItem(item, user);
+            setEditingItem(null);
+          }}
+          onClose={() => setEditingItem(null)}
+          user={user}
+        />
       )}
 
       {/* Undo Toast */}
       {toast && (
-        <div style={{position:"fixed",bottom:58,left:"50%",transform:"translateX(-50%)",
-          width:"100%",maxWidth:480,boxSizing:"border-box",
-          background:"#222",color:"#fff",display:"flex",alignItems:"center",
-          justifyContent:"space-between",padding:"14px 20px",zIndex:2000}}>
-          <span style={{fontSize:14}}>
-            Crossed off <em>{toast.name}</em>{toast.emoji ? ` ${toast.emoji}` : ""}
+        <div
+          style={{
+            position: "fixed",
+            bottom: 58,
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "100%",
+            maxWidth: 480,
+            boxSizing: "border-box",
+            background: "#222",
+            color: "#fff",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "14px 20px",
+            zIndex: 2000,
+          }}
+        >
+          <span style={{ fontSize: 14 }}>
+            Crossed off <em>{toast.name}</em>
+            {toast.emoji ? ` ${toast.emoji}` : ""}
           </span>
-          <button onClick={handleUndoToast}
-            style={{background:"none",border:"none",color:"#1aaae0",fontSize:14,
-              fontWeight:700,cursor:"pointer",letterSpacing:0.5,padding:0,marginLeft:16}}>
+          <button
+            onClick={handleUndoToast}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#1aaae0",
+              fontSize: 14,
+              fontWeight: 700,
+              cursor: "pointer",
+              letterSpacing: 0.5,
+              padding: 0,
+              marginLeft: 16,
+            }}
+          >
             UNDO
           </button>
         </div>
@@ -992,7 +2393,7 @@ export default function GroceryListPage({ user, onLogOut, onNavigate, activePage
           canDelete={lists.length > 1}
           onSave={(name, emoji) => renameList(editingList.id, name, emoji)}
           onDelete={() => {
-            const remaining = lists.filter(l => l.id !== editingList.id);
+            const remaining = lists.filter((l) => l.id !== editingList.id);
             deleteList(editingList.id);
             if (activeListId === editingList.id && remaining.length > 0) {
               setActiveListId(remaining[0].id);
@@ -1003,20 +2404,59 @@ export default function GroceryListPage({ user, onLogOut, onNavigate, activePage
       )}
 
       {/* Bottom Nav */}
-      <div style={{display:"flex",background:"#fff",borderTop:"1px solid #e8e8e8",
-        position:"sticky",bottom:0,padding:"6px 8px 8px"}}>
-        {[["Lists","☰"],["Recipes","🍴"],["Meal Plan","📅"],["Settings","⚙️"]].map(([tab, icon]) => {
+      <div
+        style={{
+          display: "flex",
+          background: "#fff",
+          borderTop: "1px solid #e8e8e8",
+          position: "sticky",
+          bottom: 0,
+          padding: "6px 8px 8px",
+        }}
+      >
+        {[
+          ["Lists", "☰"],
+          ["Recipes", "🍴"],
+          ["Meal Plan", "📅"],
+          ["Settings", "⚙️"],
+        ].map(([tab, icon]) => {
           const isActive = activePage === tab.toLowerCase();
           return (
-            <button key={tab} onClick={() => onNavigate?.(tab.toLowerCase())}
-              style={{flex:1,background:"none",border:"none",cursor:"pointer",
-              display:"flex",flexDirection:"column",alignItems:"center",gap:3,
-              padding:0,opacity:isActive?1:0.35}}>
-              <div style={{background:isActive?"#e8f6fd":"transparent",
-                borderRadius:12,padding:"5px 18px",transition:"background 0.15s"}}>
-                <span style={{fontSize:20,display:"block"}}>{icon}</span>
+            <button
+              key={tab}
+              onClick={() => onNavigate?.(tab.toLowerCase())}
+              style={{
+                flex: 1,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 3,
+                padding: 0,
+                opacity: isActive ? 1 : 0.35,
+              }}
+            >
+              <div
+                style={{
+                  background: isActive ? "#e8f6fd" : "transparent",
+                  borderRadius: 12,
+                  padding: "5px 18px",
+                  transition: "background 0.15s",
+                }}
+              >
+                <span style={{ fontSize: 20, display: "block" }}>{icon}</span>
               </div>
-              <span style={{fontSize:10,fontWeight:700,color:isActive?"#1aaae0":"#888"}}>{tab}</span>
+              <span
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: isActive ? "#1aaae0" : "#888",
+                }}
+              >
+                {tab}
+              </span>
             </button>
           );
         })}
