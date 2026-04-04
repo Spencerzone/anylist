@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import {
   collection, onSnapshot, addDoc, deleteDoc, doc,
-  setDoc, updateDoc, query, serverTimestamp,
+  setDoc, updateDoc, orderBy, query, serverTimestamp,
   where, getDocs, getDoc, arrayRemove, arrayUnion, Timestamp
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
@@ -18,17 +18,12 @@ export function useLists(user) {
 
     const q = query(
       collection(db, DEFS),
-      where("members", "array-contains", user.uid)
+      where("members", "array-contains", user.uid),
+      orderBy("createdAt", "asc")
     );
 
     const unsub = onSnapshot(q, async (snap) => {
-      const docs = snap.docs
-        .map(d => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => {
-          const ta = a.createdAt?.toMillis?.() ?? 0;
-          const tb = b.createdAt?.toMillis?.() ?? 0;
-          return ta - tb;
-        });
+      const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
       // Migration: patch any listDef missing ownerUid/members
       for (const d of docs) {
