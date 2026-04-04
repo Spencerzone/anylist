@@ -348,7 +348,7 @@ function ItemModal({ item, onSave, onDelete, onClose, user, learnedCategories = 
 // ── Add Item Bar ──────────────────────────────────────────
 function AddItemBar({ onAdd, items, user, learnedCategories = {}, categories = DEFAULT_CATEGORIES, onUpdateCategories }) {
   const [text, setText] = useState("");
-  const [showModal, setShowModal] = useState(false);
+  const [modalItem, setModalItem] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
 
   const handleChange = (val) => {
@@ -376,7 +376,7 @@ function AddItemBar({ onAdd, items, user, learnedCategories = {}, categories = D
           onChange={e => handleChange(e.target.value)}
           onKeyDown={e => {
             if (e.key === "Enter" && text.trim()) {
-              quickAdd(suggestions.length > 0 ? suggestions[0].name : text.trim());
+              quickAdd(text.trim());
             }
           }}
           placeholder="Add Item"
@@ -384,7 +384,7 @@ function AddItemBar({ onAdd, items, user, learnedCategories = {}, categories = D
             flex:1,fontFamily:"inherit",color:"#333"}}
         />
         {text.trim() && (
-          <button onClick={() => setShowModal(true)}
+          <button onClick={() => setModalItem({ name: text, category: guessCategory(text, learnedCategories), note: "" })}
             style={{background:"none",border:"none",color:"#1aaae0",fontSize:13,
               fontWeight:700,cursor:"pointer",padding:"2px 6px",borderRadius:8,
               whiteSpace:"nowrap"}}>
@@ -393,29 +393,56 @@ function AddItemBar({ onAdd, items, user, learnedCategories = {}, categories = D
         )}
       </div>
 
-      {suggestions.length > 0 && (
+      {text.trim().length > 0 && (
         <div style={{position:"absolute",left:14,right:14,top:"100%",background:"#fff",
           borderRadius:12,boxShadow:"0 4px 24px rgba(0,0,0,0.12)",zIndex:100,
           overflow:"hidden",border:"1px solid #eee"}}>
+          {/* "Add [typed text]" row — always first */}
+          <div onMouseDown={() => quickAdd(text.trim())}
+            style={{padding:"10px 16px",cursor:"pointer",fontSize:14,
+              borderBottom:"1px solid #f5f5f5",display:"flex",alignItems:"center",gap:10}}>
+            <span style={{color:"#1aaae0",fontSize:18,fontWeight:700,lineHeight:1}}>+</span>
+            <div style={{fontWeight:600,color:"#1aaae0"}}>
+              Add {"\u201C"}{text.trim()}{"\u201D"}
+            </div>
+          </div>
+          {/* Matching suggestions with pencil/edit icons */}
           {suggestions.map(s => (
-            <div key={s.id} onMouseDown={() => quickAdd(s.name)}
-              style={{padding:"10px 16px",cursor:"pointer",fontSize:14,
+            <div key={s.id}
+              style={{padding:"10px 16px",fontSize:14,
                 borderBottom:"1px solid #f5f5f5",display:"flex",alignItems:"center",gap:10}}>
-              <span>{CAT_ICONS[s.category]}</span>
-              <div>
-                <div style={{fontWeight:600,color:"#222"}}>{s.name}</div>
-                <div style={{fontSize:11,color:"#aaa"}}>{s.category}</div>
+              <div onMouseDown={() => quickAdd(s.name)}
+                style={{display:"flex",alignItems:"center",gap:10,flex:1,minWidth:0,cursor:"pointer"}}>
+                <span>{CAT_ICONS[s.category]}</span>
+                <div>
+                  <div style={{fontWeight:600,color:"#222"}}>{s.name}</div>
+                  <div style={{fontSize:11,color:"#aaa"}}>{s.category}</div>
+                </div>
               </div>
+              <button onMouseDown={(e) => {
+                  e.stopPropagation();
+                  setModalItem({
+                    name: s.name, category: s.category,
+                    note: s.note || "", quantity: s.quantity || "", packageSize: s.packageSize || ""
+                  });
+                  setText(""); setSuggestions([]);
+                }}
+                style={{background:"none",border:"none",cursor:"pointer",padding:"4px 6px",
+                  fontSize:16,color:"#1aaae0",flexShrink:0,lineHeight:1}}
+                aria-label="Edit before adding"
+                title="Edit before adding">
+                ✏️
+              </button>
             </div>
           ))}
         </div>
       )}
 
-      {showModal && (
+      {modalItem && (
         <ItemModal
-          item={{ name: text, category: guessCategory(text, learnedCategories), note: "" }}
-          onSave={(newItem, u) => { onAdd(newItem, u); setText(""); setShowModal(false); }}
-          onClose={() => setShowModal(false)}
+          item={modalItem}
+          onSave={(newItem, u) => { onAdd(newItem, u); setText(""); setModalItem(null); }}
+          onClose={() => setModalItem(null)}
           user={user}
           categories={categories}
           onUpdateCategories={onUpdateCategories}
