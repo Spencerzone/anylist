@@ -40,12 +40,42 @@ class ErrorBoundary extends Component {
 export default function App() {
   const { user, signIn, logOut } = useAuth();
   const [page, setPage] = useState("lists");
-  const { lists } = useLists();
+  const { lists, acceptInvite } = useLists(user);
   const [activeListId, setActiveListId] = useState(null);
+  const [inviteError, setInviteError] = useState(null);
 
   useEffect(() => {
     if (!activeListId && lists.length > 0) setActiveListId(lists[0].id);
   }, [lists, activeListId]);
+
+  // Handle ?invite=CODE in the URL — stash it if not yet signed in
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("invite");
+    if (!code) return;
+    // Clean URL immediately so it doesn't persist on refresh
+    window.history.replaceState({}, "", window.location.pathname);
+    if (!user) {
+      sessionStorage.setItem("pendingInvite", code);
+    }
+  }, []); // eslint-disable-line
+
+  // Accept invite once the user is signed in
+  useEffect(() => {
+    if (!user) return;
+    const code = sessionStorage.getItem("pendingInvite");
+    if (!code) return;
+    sessionStorage.removeItem("pendingInvite");
+
+    acceptInvite(code)
+      .then((listId) => {
+        setActiveListId(listId);
+        setPage("lists");
+      })
+      .catch((err) => {
+        setInviteError(err.message || "Could not accept invite.");
+      });
+  }, [user]); // eslint-disable-line
 
   if (user === undefined) {
     return (
@@ -60,18 +90,30 @@ export default function App() {
 
   if (!user) return <LoginPage onSignIn={signIn} />;
 
-  if (page === "recipes") {
-    return <RecipesPage user={user} onNavigate={setPage} activePage={page} activeListId={activeListId} />;
-  }
-
-  if (page === "meal plan") {
-    return <MealPlanPage user={user} onNavigate={setPage} activePage={page} />;
-  }
-
   return (
     <ErrorBoundary>
-      <GroceryListPage user={user} onLogOut={logOut} onNavigate={setPage} activePage={page}
-        activeListId={activeListId} onListChange={setActiveListId} />
+      {inviteError && (
+        <div style={{position:"fixed",top:0,left:0,right:0,zIndex:9999,
+          background:"#c0392b",color:"#fff",padding:"12px 16px",
+          display:"flex",alignItems:"center",justifyContent:"space-between",
+          fontSize:14,fontWeight:600}}>
+          <span>Invite error: {inviteError}</span>
+          <button onClick={() => setInviteError(null)}
+            style={{background:"none",border:"none",color:"#fff",fontSize:20,cursor:"pointer",padding:0}}>
+            ✕
+          </button>
+        </div>
+      )}
+      {page === "recipes" && (
+        <RecipesPage user={user} onNavigate={setPage} activePage={page} activeListId={activeListId} />
+      )}
+      {page === "meal plan" && (
+        <MealPlanPage user={user} onNavigate={setPage} activePage={page} />
+      )}
+      {page !== "recipes" && page !== "meal plan" && (
+        <GroceryListPage user={user} onLogOut={logOut} onNavigate={setPage} activePage={page}
+          activeListId={activeListId} onListChange={setActiveListId} />
+      )}
     </ErrorBoundary>
   );
 }
