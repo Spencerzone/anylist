@@ -1,5 +1,5 @@
 // src/pages/RecipesPage.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRecipes } from "../hooks/useRecipes";
 import { useGroceryList } from "../hooks/useGroceryList";
 import { guessCategory } from "../lib/categories";
@@ -779,7 +779,8 @@ function BottomNav({ activePage, onNavigate }) {
 
 // ── Main Page ──────────────────────────────────────────────
 
-export default function RecipesPage({ user, onNavigate, activePage, activeListId }) {
+export default function RecipesPage({ user, onNavigate, activePage, activeListId,
+  initialRecipeId, onInitialRecipeHandled }) {
   const { recipes, loading, addRecipe, updateRecipe, deleteRecipe } = useRecipes();
   const { addItem, persistedLearned } = useGroceryList(activeListId);
 
@@ -789,6 +790,14 @@ export default function RecipesPage({ user, onNavigate, activePage, activeListId
   const [showSearch, setShowSearch] = useState(false);
   const [fromView, setFromView] = useState("list");
   const [pantryItems, setPantryItems] = useState([]);
+
+  // Deep-link: open a specific recipe (e.g. tapped from the Meal Plan tab).
+  useEffect(() => {
+    if (!initialRecipeId || loading) return;
+    const recipe = recipes.find(r => r.id === initialRecipeId);
+    if (recipe) { setFromView("list"); setSelected(recipe); setView("detail"); }
+    onInitialRecipeHandled?.();
+  }, [initialRecipeId, loading, recipes, onInitialRecipeHandled]);
 
   const filtered = recipes.filter(r =>
     r.name.toLowerCase().includes(search.toLowerCase())
