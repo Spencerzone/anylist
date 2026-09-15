@@ -136,32 +136,17 @@ function parseWprmNotes(doc) {
   return text || null;
 }
 
-async function fetchViaProxy(url) {
-  const proxies = [
-    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-    `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-    `https://thingproxy.freeboard.io/fetch/${url}`,
-    `https://test.cors.workers.dev/?${url}`,
-  ];
-  for (const proxyUrl of proxies) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 8000);
-    try {
-      const res = await fetch(proxyUrl, { signal: controller.signal });
-      if (res.ok) {
-        const text = await res.text();
-        if (text && text.trim().length > 0) return text;
-      }
-    } catch {} finally {
-      clearTimeout(timer);
-    }
+async function fetchImportedHtml(url) {
+  const res = await fetch(`/api/import?url=${encodeURIComponent(url)}`);
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new Error(data?.error || "Could not fetch page. Try again in a bit, or copy the details manually.");
   }
-  throw new Error("Could not fetch page — all proxies failed. This can happen if the free proxy services are temporarily down; try again in a bit, or copy the details manually.");
+  return data.html;
 }
 
 async function importRecipeFromUrl(url) {
-  const html = await fetchViaProxy(url);
+  const html = await fetchImportedHtml(url);
 
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, "text/html");
