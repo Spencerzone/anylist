@@ -259,7 +259,7 @@ function AddMealPanel({ dateStr, recipes, onAdd, onClose }) {
 
 // ── Meal options sheet ─────────────────────────────────────
 
-function MealOptionsSheet({ meal, weekDates, onMove, onUpdate, onDelete, onClose }) {
+function MealOptionsSheet({ meal, weekDates, onMove, onUpdate, onDelete, onClose, onViewRecipe }) {
   const [movingTo, setMovingTo] = useState(false);
   const [editing, setEditing]   = useState(false);
   const [draft, setDraft]       = useState(meal.description || "");
@@ -323,6 +323,15 @@ function MealOptionsSheet({ meal, weekDates, onMove, onUpdate, onDelete, onClose
                   borderRadius: 10, fontWeight: 700, fontSize: 14,
                   cursor: "pointer", fontFamily: "inherit" }}>
                 Edit
+              </button>
+            )}
+            {meal.type === "recipe" && (
+              <button onClick={() => { onViewRecipe(meal.recipeId); onClose(); }}
+                style={{ width: "100%", padding: "13px", marginBottom: 10,
+                  background: "#f0f9fe", color: "#1aaae0", border: "none",
+                  borderRadius: 10, fontWeight: 700, fontSize: 14,
+                  cursor: "pointer", fontFamily: "inherit" }}>
+                View Recipe
               </button>
             )}
             <button onClick={() => setMovingTo(true)}
@@ -406,7 +415,7 @@ function BottomNav({ activePage, onNavigate }) {
 
 // ── Main page ──────────────────────────────────────────────
 
-export default function MealPlanPage({ user, onNavigate, activePage }) {
+export default function MealPlanPage({ user, onNavigate, activePage, onViewRecipe }) {
   const [weekOffset, setWeekOffset]   = useState(0);
   const [addingTo, setAddingTo]       = useState(null); // dateStr or null
   const [mealOptions, setMealOptions] = useState(null); // meal object or null
@@ -495,6 +504,7 @@ export default function MealPlanPage({ user, onNavigate, activePage }) {
           onUpdate={updateMeal}
           onDelete={deleteMeal}
           onClose={() => setMealOptions(null)}
+          onViewRecipe={onViewRecipe}
         />
       )}
 

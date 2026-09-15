@@ -42,6 +42,12 @@ export default function App() {
   const [page, setPage] = useState("lists");
   const { lists } = useLists();
   const [activeListId, setActiveListId] = useState(null);
+  const [openRecipeId, setOpenRecipeId] = useState(null);
+
+  const viewRecipe = (recipeId) => {
+    setOpenRecipeId(recipeId);
+    setPage("recipes");
+  };
 
   useEffect(() => {
     if (!activeListId && lists.length > 0) setActiveListId(lists[0].id);
@@ -61,11 +67,12 @@ export default function App() {
   if (!user) return <LoginPage onSignIn={signIn} />;
 
   if (page === "recipes") {
-    return <RecipesPage user={user} onNavigate={setPage} activePage={page} activeListId={activeListId} />;
+    return <RecipesPage user={user} onNavigate={setPage} activePage={page} activeListId={activeListId}
+      initialRecipeId={openRecipeId} onInitialRecipeHandled={() => setOpenRecipeId(null)} />;
   }
 
   if (page === "meal plan") {
-    return <MealPlanPage user={user} onNavigate={setPage} activePage={page} />;
+    return <MealPlanPage user={user} onNavigate={setPage} activePage={page} onViewRecipe={viewRecipe} />;
   }
 
   return (
