@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import {
   collection, onSnapshot, addDoc, deleteDoc, doc,
-  setDoc, updateDoc, orderBy, query, serverTimestamp
+  setDoc, updateDoc, orderBy, query, serverTimestamp, writeBatch
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 
@@ -22,9 +22,17 @@ export function useLists() {
           name: "Groceries",
           emoji: "🛒",
           createdAt: serverTimestamp(),
+          sortOrder: 0,
         });
       } else {
-        setLists(docs);
+        // Sort by sortOrder when present; lists without one (not yet migrated)
+        // keep their relative createdAt order and sort after any that have it.
+        const sorted = [...docs].sort((a, b) => {
+          const ao = a.sortOrder ?? Number.MAX_SAFE_INTEGER;
+          const bo = b.sortOrder ?? Number.MAX_SAFE_INTEGER;
+          return ao - bo;
+        });
+        setLists(sorted);
         setLoading(false);
       }
     });
@@ -47,5 +55,23 @@ export function useLists() {
     await deleteDoc(doc(db, DEFS, id));
   };
 
-  return { lists, loading, createList, renameList, deleteList };
+  // Persists a full ordering by writing sortOrder = index for each list.
+  const reorderLists = async (orderedIds) => {
+    const batch = writeBatch(db);
+    orderedIds.forEach((id, index) => {
+      batch.update(doc(db, DEFS, id), { sortOrder: index });
+    });
+    await batch.commit();
+  };
+
+  const moveList = async (id, direction) => {
+    const idx = lists.findIndex((l) => l.id === id);
+    const newIdx = idx + direction;
+    if (idx === -1 || newIdx < 0 || newIdx >= lists.length) return;
+    const ids = lists.map((l) => l.id);
+    [ids[idx], ids[newIdx]] = [ids[newIdx], ids[idx]];
+    await reorderLists(ids);
+  };
+
+  return { lists, loading, createList, renameList, deleteList, moveList };
 }

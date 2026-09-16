@@ -152,7 +152,17 @@ function AddListModal({ onAdd, onClose }) {
   );
 }
 
-function EditListModal({ list, onSave, onDelete, canDelete, onClose }) {
+function EditListModal({
+  list,
+  onSave,
+  onDelete,
+  canDelete,
+  onClose,
+  onMoveLeft,
+  onMoveRight,
+  canMoveLeft,
+  canMoveRight,
+}) {
   const [name, setName] = useState(list.name);
   const [emoji, setEmoji] = useState(list.emoji || "📋");
   return (
@@ -251,6 +261,46 @@ function EditListModal({ list, onSave, onDelete, canDelete, onClose }) {
             marginBottom: 14,
           }}
         />
+        {(onMoveLeft || onMoveRight) && (
+          <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+            <button
+              onClick={onMoveLeft}
+              disabled={!canMoveLeft}
+              style={{
+                flex: 1,
+                padding: "11px",
+                background: canMoveLeft ? "#f0f0f0" : "#f8f8f8",
+                color: canMoveLeft ? "#1a1a2e" : "#ccc",
+                border: "none",
+                borderRadius: 12,
+                fontWeight: 600,
+                fontSize: 14,
+                cursor: canMoveLeft ? "pointer" : "default",
+                fontFamily: "inherit",
+              }}
+            >
+              ◀ Move earlier
+            </button>
+            <button
+              onClick={onMoveRight}
+              disabled={!canMoveRight}
+              style={{
+                flex: 1,
+                padding: "11px",
+                background: canMoveRight ? "#f0f0f0" : "#f8f8f8",
+                color: canMoveRight ? "#1a1a2e" : "#ccc",
+                border: "none",
+                borderRadius: 12,
+                fontWeight: 600,
+                fontSize: 14,
+                cursor: canMoveRight ? "pointer" : "default",
+                fontFamily: "inherit",
+              }}
+            >
+              Move later ▶
+            </button>
+          </div>
+        )}
         <button
           onClick={() => {
             if (name.trim()) {
@@ -1801,7 +1851,7 @@ export default function GroceryListPage({
   activeListId,
   onListChange,
 }) {
-  const { lists, createList, renameList, deleteList } = useLists();
+  const { lists, createList, renameList, deleteList, moveList } = useLists();
   const setActiveListId = onListChange;
   const [showAddList, setShowAddList] = useState(false);
   const [editingList, setEditingList] = useState(null);
@@ -2400,6 +2450,12 @@ export default function GroceryListPage({
             }
           }}
           onClose={() => setEditingList(null)}
+          onMoveLeft={() => moveList(editingList.id, -1)}
+          onMoveRight={() => moveList(editingList.id, 1)}
+          canMoveLeft={lists.findIndex((l) => l.id === editingList.id) > 0}
+          canMoveRight={
+            lists.findIndex((l) => l.id === editingList.id) < lists.length - 1
+          }
         />
       )}
 
